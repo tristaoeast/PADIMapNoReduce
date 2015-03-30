@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Client
+namespace JobTrackerClientLib
 {
-    class Program
+    public interface IJobTrackerC
     {
-        static void Main(string[] args)
-        {
-        }
+        void submitJob(long fileSize, int splits);
     }
 }
