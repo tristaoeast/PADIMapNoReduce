@@ -28,44 +28,45 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.bt_init = new System.Windows.Forms.Button();
+            this.lbl_url_cli = new System.Windows.Forms.Label();
+            this.tb_url_cli = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // button1
+            // bt_init
             // 
-            this.button1.Location = new System.Drawing.Point(319, 17);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "INIT";
-            this.button1.UseVisualStyleBackColor = true;
+            this.bt_init.Location = new System.Drawing.Point(319, 17);
+            this.bt_init.Name = "bt_init";
+            this.bt_init.Size = new System.Drawing.Size(75, 23);
+            this.bt_init.TabIndex = 0;
+            this.bt_init.Text = "INIT";
+            this.bt_init.UseVisualStyleBackColor = true;
+            this.bt_init.Click += new System.EventHandler(this.bt_init_Click);
             // 
-            // label1
+            // lbl_url_cli
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 22);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "EntryURL";
+            this.lbl_url_cli.AutoSize = true;
+            this.lbl_url_cli.Location = new System.Drawing.Point(12, 22);
+            this.lbl_url_cli.Name = "lbl_url_cli";
+            this.lbl_url_cli.Size = new System.Drawing.Size(53, 13);
+            this.lbl_url_cli.TabIndex = 1;
+            this.lbl_url_cli.Text = "EntryURL";
             // 
-            // textBox1
+            // tb_url_cli
             // 
-            this.textBox1.Location = new System.Drawing.Point(71, 19);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(225, 20);
-            this.textBox1.TabIndex = 2;
+            this.tb_url_cli.Location = new System.Drawing.Point(71, 19);
+            this.tb_url_cli.Name = "tb_url_cli";
+            this.tb_url_cli.Size = new System.Drawing.Size(225, 20);
+            this.tb_url_cli.TabIndex = 2;
             // 
             // UserAppGUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(404, 90);
-            this.Controls.Add(this.textBox1);
-            this.Controls.Add(this.label1);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.tb_url_cli);
+            this.Controls.Add(this.lbl_url_cli);
+            this.Controls.Add(this.bt_init);
             this.Name = "UserAppGUI";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -75,9 +76,9 @@
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Button bt_init;
+        private System.Windows.Forms.Label lbl_url_cli;
+        private System.Windows.Forms.TextBox tb_url_cli;
     }
 }
 

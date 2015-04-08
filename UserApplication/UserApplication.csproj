@@ -77,6 +77,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UserClientLib\UserClientLib.csproj">
+      <Project>{3f3ec27b-46c1-4d53-8c5a-e69e025ddcfa}</Project>
+      <Name>UserClientLib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

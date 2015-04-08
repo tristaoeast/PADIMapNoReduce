@@ -16,5 +16,11 @@ namespace PuppetMaster
         {
             InitializeComponent();
         }
+
+        private void Submit(object sender, EventArgs e)
+        {
+
+        }
+ 
     }
 }

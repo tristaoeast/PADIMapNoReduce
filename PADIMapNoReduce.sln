@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobTrackerClientLib", "JobT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobTrackerWorkerLib", "JobTrackerWorkerLib\JobTrackerWorkerLib.csproj", "{07C0E80A-4A77-4AC0-8B57-470FE2E512F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetAppLib", "PuppetAppLib\PuppetAppLib.csproj", "{C3994D75-0863-40C6-973D-86BC4DF04942}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,10 @@ Global
 		{07C0E80A-4A77-4AC0-8B57-470FE2E512F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07C0E80A-4A77-4AC0-8B57-470FE2E512F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07C0E80A-4A77-4AC0-8B57-470FE2E512F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3994D75-0863-40C6-973D-86BC4DF04942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3994D75-0863-40C6-973D-86BC4DF04942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3994D75-0863-40C6-973D-86BC4DF04942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3994D75-0863-40C6-973D-86BC4DF04942}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
