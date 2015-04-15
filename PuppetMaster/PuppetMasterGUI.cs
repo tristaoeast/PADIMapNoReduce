@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PuppetAppLib;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -14,15 +15,17 @@ namespace PuppetMaster
     public partial class PuppetMasterGUI : Form
     {
         private String command;
-        private String args;
+        private String[] args;
 
         public PuppetMasterGUI()
         {
             InitializeComponent();
         }
 
-        private void Init(String EntryURL)
+        private void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, IMap dll)
         {
+            IAppPuppet app = (IAppPuppet)Activator.GetObject(typeof(IAppPuppet), "tcp://localhost:40001/A");
+            app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
 
         }
 
@@ -40,7 +43,10 @@ namespace PuppetMaster
                 int pFrom = submittedText.IndexOf("(") + "(".Length;
                 int pTo = submittedText.LastIndexOf(")");
                 if (pTo - pFrom > pFrom)
-                    args = submittedText.Substring(pFrom, pTo - pFrom);
+                {
+                    String tempArgs = submittedText.Substring(pFrom, pTo - pFrom);
+                    args = tempArgs.Split(',');
+                }
                 else
                 {
                     tb_Output.AppendText("Wrong command format. Must be something like command(args..)\r\n");
@@ -49,6 +55,10 @@ namespace PuppetMaster
 
                 if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
                 {
+                    if (args.Length == 6)
+                        Submit(args[0], args[1], args[2], Int32.Parse(args[3]), args[4], args[5]);
+                    else
+                        tb_Output.AppendText("Wrong number of args. Submit command must have 6 arguments");
                 }
                 else if (command.Equals("Worker", StringComparison.InvariantCultureIgnoreCase))
                 {
