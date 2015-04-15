@@ -95,4 +95,6 @@ namespace PuppetMaster
         }
 
     }
+
+    public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster { }
 }
