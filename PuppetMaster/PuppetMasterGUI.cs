@@ -1,4 +1,5 @@
-﻿using PuppetAppLib;
+﻿using MapLib;
+using PuppetAppLib;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,12 +27,11 @@ namespace PuppetMaster
         {
             IAppPuppet app = (IAppPuppet)Activator.GetObject(typeof(IAppPuppet), "tcp://localhost:40001/A");
             app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
-
         }
 
         private void bt_submit_Click(object sender, EventArgs e)
         {
-            Process.Start("C:\\");
+            //Process.Start("C:\\");
 
             String submittedText;
             if (!string.IsNullOrWhiteSpace(tb_Submit.Text))
