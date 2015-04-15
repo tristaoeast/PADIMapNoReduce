@@ -31,6 +31,7 @@
             this.bt_init = new System.Windows.Forms.Button();
             this.lbl_url_cli = new System.Windows.Forms.Label();
             this.tb_url_cli = new System.Windows.Forms.TextBox();
+            this.tb_UserApp_debug = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // bt_init
@@ -59,11 +60,20 @@
             this.tb_url_cli.Size = new System.Drawing.Size(225, 20);
             this.tb_url_cli.TabIndex = 2;
             // 
+            // tb_UserApp_debug
+            // 
+            this.tb_UserApp_debug.Location = new System.Drawing.Point(71, 75);
+            this.tb_UserApp_debug.Multiline = true;
+            this.tb_UserApp_debug.Name = "tb_UserApp_debug";
+            this.tb_UserApp_debug.Size = new System.Drawing.Size(514, 172);
+            this.tb_UserApp_debug.TabIndex = 3;
+            // 
             // UserAppGUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(404, 90);
+            this.ClientSize = new System.Drawing.Size(638, 283);
+            this.Controls.Add(this.tb_UserApp_debug);
             this.Controls.Add(this.tb_url_cli);
             this.Controls.Add(this.lbl_url_cli);
             this.Controls.Add(this.bt_init);
@@ -79,6 +89,7 @@
         private System.Windows.Forms.Button bt_init;
         private System.Windows.Forms.Label lbl_url_cli;
         private System.Windows.Forms.TextBox tb_url_cli;
+        private System.Windows.Forms.TextBox tb_UserApp_debug;
     }
 }
 
