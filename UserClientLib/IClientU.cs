@@ -10,5 +10,6 @@ namespace UserClientLib
     public interface IClientU
     {
         IList<KeyValuePair<String, String>> Submit(String inputFile, int splits, String outputDirectory, IMap mapObject);
+        void Init(String entryUrl);
     }
 }

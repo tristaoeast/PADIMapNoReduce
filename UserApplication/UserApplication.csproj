@@ -78,6 +78,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MapLib\MapLib.csproj">
+      <Project>{d7eedd6f-827e-4088-a3e9-0eb0cfa65a2d}</Project>
+      <Name>MapLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PuppetAppLib\PuppetAppLib.csproj">
+      <Project>{c3994d75-0863-40c6-973d-86bc4df04942}</Project>
+      <Name>PuppetAppLib</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UserClientLib\UserClientLib.csproj">
       <Project>{3f3ec27b-46c1-4d53-8c5a-e69e025ddcfa}</Project>
       <Name>UserClientLib</Name>
