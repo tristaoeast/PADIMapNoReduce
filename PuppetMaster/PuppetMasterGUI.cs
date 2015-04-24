@@ -55,10 +55,10 @@ namespace PuppetMaster
 
                 if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (args.Length == 6)
-                        Submit(args[0], args[1], args[2], Int32.Parse(args[3]), args[4], args[5]);
-                    else
-                        tb_Output.AppendText("Wrong number of args. Submit command must have 6 arguments");
+                    //if (args.Length == 6)
+                    // //   Submit(args[0], args[1], args[2], Int32.Parse(args[3]), args[4], args[5]);
+                    //else
+                    //    tb_Output.AppendText("Wrong number of args. Submit command must have 6 arguments");
                 }
                 else if (command.Equals("Worker", StringComparison.InvariantCultureIgnoreCase))
                 {
