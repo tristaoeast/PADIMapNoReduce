@@ -9,6 +9,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 using JobTrackerWorkerLib;
 using JobTrackerClientLib;
 using System.Reflection;
+using WorkerClientLib;
 
 namespace Worker
 {
@@ -52,8 +53,13 @@ namespace Worker
             return true;
         }
 
-        public void SubmitJobToWorker()
+        public void SubmitJobToWorker(long start, long end, int split)
         {
+
+            IClientW client = (IClientW)Activator.GetObject(typeof(IClientW), "tcp://localhost:10001/C");
+            byte[] fileSplit = client.GetSplit(start, end);
+
+            //TODO: CONVERT THE FILE SPLIT BYTES INTO A TEXT FILE...
 
             while (mapObject == null) ;
 
