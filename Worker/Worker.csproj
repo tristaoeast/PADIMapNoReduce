@@ -34,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,6 +47,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\JobTrackerClientLib\JobTrackerClientLib.csproj">
+      <Project>{8aa2293b-5f6c-433d-a2df-c51a230c984b}</Project>
+      <Name>JobTrackerClientLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JobTrackerWorkerLib\JobTrackerWorkerLib.csproj">
+      <Project>{07c0e80a-4a77-4ac0-8b57-470fe2e512f3}</Project>
+      <Name>JobTrackerWorkerLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\WorkerClientLib\WorkerClientLib.csproj">
+      <Project>{af128a53-752b-4b29-9345-1a6240be9b85}</Project>
+      <Name>WorkerClientLib</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

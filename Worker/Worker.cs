@@ -54,6 +54,7 @@ namespace Worker
 
         public void SubmitJobToWorker()
         {
+
             while (mapObject == null) ;
 
             // Dynamically Invoke the method
