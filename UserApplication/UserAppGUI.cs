@@ -6,6 +6,9 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Remoting;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -21,6 +24,14 @@ namespace UserApplication
         {
             InitializeComponent();
             UserAppServices.form = this;
+
+            TcpChannel chan = new TcpChannel(40001);
+            ChannelServices.RegisterChannel(chan, false);
+
+            //Activation
+            UserAppServices servicosToPuppet = new UserAppServices();
+            RemotingServices.Marshal(servicosToPuppet, "U", typeof(UserAppServices));
+
         }
 
         public void Init(String entryUrl){
