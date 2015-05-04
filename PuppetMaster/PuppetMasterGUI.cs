@@ -86,14 +86,14 @@ namespace PuppetMaster
             app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
         }
 
-        private void bt_loadScript_Click(object send, EventArgs e)
+        private void bt_loadScript_Click(object sender, EventArgs e)
         {
             String pathToScript;
+            tb_Output.AppendText("Load button pressed...\r\n");
 
             if (!string.IsNullOrWhiteSpace(tb_loadScript.Text))
             {
                 pathToScript = tb_loadScript.Text;
-                tb_Output.AppendText("pathToScript: " + pathToScript + "\r\n");
                 String line;
 
                 System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
