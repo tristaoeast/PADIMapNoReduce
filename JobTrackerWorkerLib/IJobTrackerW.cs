@@ -9,5 +9,6 @@ namespace JobTrackerWorkerLib
     public interface IJobTrackerW
     {
         IList<int> getSplitRange();
+        void submitJob(long fileSize, int splits);
     }
 }
