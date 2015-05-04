@@ -32,6 +32,8 @@ namespace PuppetMaster
         private void bt_submit_Click(object sender, EventArgs e)
         {
             //Process.Start("C:\\");
+            //Process.Start(@"Z:\Documents\Visual Studio 2012\Projects\PADIMapNoReduce\JobTracker\bin\Debug\JobTracker.exe");
+            Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe");
 
             String submittedText;
             if (!string.IsNullOrWhiteSpace(tb_Submit.Text))
@@ -96,5 +98,5 @@ namespace PuppetMaster
 
     }
 
-    public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster { }
+    public class PuppetMasterServices : MarshalByRefObject { }
 }

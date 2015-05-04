@@ -10,6 +10,8 @@ namespace JobTracker
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Prees any key to exit");
+            Console.ReadLine();
         }
     }
 }

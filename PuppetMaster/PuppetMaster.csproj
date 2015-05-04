@@ -44,7 +44,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IPuppetMaster.cs" />
     <Compile Include="PuppetMasterGUI.cs">
       <SubType>Form</SubType>
     </Compile>
