@@ -60,32 +60,29 @@ namespace Client
             return subset;
         }
 
-        public IList<KeyValuePair<String, String>> GetSplit(long startIndex, long endIndex)
+        public byte[] GetSplit(long startIndex, long endIndex)
         {
             var stream = new StreamReader(inputFile);
             long start = startIndex, end = endIndex;
             bool exitWhile = false;
             long byteCounter = 0;
-            long lineCounter = 0;
-            IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
+            String result = String.Empty;
             while (!stream.EndOfStream)
             {
                 String line = stream.ReadLine();
-                byteCounter += line.Length + 2;
-                lineCounter++;
-                //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
+                byteCounter += line.Length + System.Environment.NewLine.Length;
+                //Console.WriteLine("bc:" + byteCounter + " line:" + line);
                 if (byteCounter >= start + 1)
                 {
                     while (byteCounter <= end + 1)
                     {
-                        //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
-                        result.Add(new KeyValuePair<String, String>(lineCounter.ToString(), line));
+                        //Console.WriteLine("bc:" + byteCounter + " line:" + line);
+                        result += line + System.Environment.NewLine;
                         //Read next line
                         if (!stream.EndOfStream)
                         {
                             line = stream.ReadLine();
-                            byteCounter += line.Length + 2;
-                            lineCounter++;
+                            byteCounter += line.Length + System.Environment.NewLine.Length;
                         }
                         else
                             byteCounter = end + 10;
@@ -94,7 +91,8 @@ namespace Client
                 }
                 if (exitWhile) break;
             }
-            return result;
+            //result = result.Remove(result.Length - System.Environment.NewLine.Length);
+            return Encoding.UTF8.GetBytes(result);
         }
 
         //public IList<KeyValuePair<String, String>> GetSplit(long startIndex, long endIndex)
@@ -177,7 +175,7 @@ namespace Client
             client = cli;
         }
 
-        public IList<KeyValuePair<String, String>> GetSplit(long start, long end)
+        public byte[] GetSplit(long start, long end)
         {
             //byte[] byteArray = client.getFileBytes(start, end);
             //return byteArray;
