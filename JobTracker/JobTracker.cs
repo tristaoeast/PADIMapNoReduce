@@ -25,7 +25,7 @@ namespace JobTracker
             Console.ReadLine();
         }
 
-        public IList<int> getSplitRange()
+        public IList<int> GetSplitRange()
         {
             IList<int> splitsRange = new List<int>();
             //inicio, fim e numero do split
@@ -44,12 +44,12 @@ namespace JobTracker
             jobTracker = jt;
         }
 
-        IList<int> getSplitRange()
+        IList<int> GetSplitRange()
         {
-            return jobTracker.getSplitRange();
+            return jobTracker.GetSplitRange();
         }
 
-        void submitJob(long fileSize, int splits)
+        void SubmitJob(long fileSize, int splits)
         {
             //implement
         }

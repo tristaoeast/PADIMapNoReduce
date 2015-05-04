@@ -16,6 +16,7 @@ namespace Worker
 {
     class Worker
     {
+        String jobTrackerURL = String.Empty;
         static void Main(string[] args)
         {
             TcpChannel channel = new TcpChannel(10000);
@@ -83,12 +84,10 @@ namespace Worker
                     }
                 }
             }
+        }
 
-
-
-
-
-
+        public void SubmitJob(long fileSize, int splits, String className, byte[] code) {
+            
         }
     }
 
