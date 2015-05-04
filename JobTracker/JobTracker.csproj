@@ -48,6 +48,12 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PADIMapNoReduceLibs\PADIMapNoReduceLibs.csproj">
+      <Project>{456d2f1a-8921-4d0e-9a79-09825287ce24}</Project>
+      <Name>PADIMapNoReduceLibs</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -26,43 +26,56 @@ namespace PuppetMaster
 
         private void processCommand(String submText)
         {
+            //tb_Output.AppendText("Entering command processing...\r\n");
             String[] split = submText.Split(null);
             command = split[0];
-
+            //tb_Output.AppendText("Command: "+ command +"\r\n");
             if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length == 7)
+                {
+                    //tb_Output.AppendText(split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
                     Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], File.ReadAllBytes(split[6]));
+                }
+
                 else
                     tb_Output.AppendText("Wrong number of args. Submit command must have 6 arguments");
             }
             else if (command.Equals("Worker", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("Wait", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("SlowW", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("FreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("UnfreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
+                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else
             {
-                tb_Output.AppendText("Invalid command\r\n");
+                //tb_Output.AppendText("Invalid command\r\n");
                 return;
             }
         }
@@ -75,14 +88,23 @@ namespace PuppetMaster
 
         private void bt_loadScript_Click(object send, EventArgs e)
         {
-            String pathToScript = tb_loadScript.Text;
-            String line;
+            String pathToScript;
 
-            System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
-            while ((line = file.ReadLine()) != null)
+            if (!string.IsNullOrWhiteSpace(tb_loadScript.Text))
             {
-                processCommand(line);
+                pathToScript = tb_loadScript.Text;
+                tb_Output.AppendText("pathToScript: " + pathToScript + "\r\n");
+                String line;
+
+                System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
+                while ((line = file.ReadLine()) != null)
+                {
+                    tb_Output.AppendText("line: " + line + "\r\n");
+                    processCommand(line);
+                }
             }
+            else
+                tb_Output.AppendText("Please enter a command\r\n");
         }
 
         private void bt_submit_Click(object sender, EventArgs e)
