@@ -1,9 +1,11 @@
 ﻿using JobTrackerClientLib;
-using JobTrackerWorkerLib;
+using PADIMapNoReduceLibs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +18,9 @@ namespace JobTracker
         int nSplits = 0;
         static void Main(string[] args)
         {
+            TcpChannel channel = new TcpChannel(40000);
+            ChannelServices.RegisterChannel(channel, true);
+
             JobTracker jt = new JobTracker();
             //Activation
             JobTrackerServicesToWorker jtsw = new JobTrackerServicesToWorker(jt);
@@ -25,12 +30,17 @@ namespace JobTracker
             Console.ReadLine();
         }
 
-        public IList<int> getSplitRange()
+        public IList<int> GetSplitRange()
         {
             IList<int> splitsRange = new List<int>();
             //inicio, fim e numero do split
 
             return splitsRange;
+        }
+
+        public int getSentBytes() 
+        {
+            return sentBytes;
         }
 
     }
@@ -44,13 +54,26 @@ namespace JobTracker
             jobTracker = jt;
         }
 
-        IList<int> getSplitRange()
+        IList<int> GetSplitRange()
         {
-            return jobTracker.getSplitRange();
+            return jobTracker.GetSplitRange();
         }
 
-        void submitJob(long fileSize, int splits)
+        void SubmitJob(long fileSize, int splits, String className, byte[] code)
+
         {
+            int sentBytes = jobTracker.getSentBytes();
+            if (sentBytes > fileSize)
+            {
+
+            }
+            else
+            { 
+
+            }
+
+            //IWorkerJT newWorker = (IWorkerJT)Activator.GetObject(typeof(IWorkerJT), "METER_URL_BEM");
+            //newWorker.SubmitJobToWorker(
             //implement
         }
     }

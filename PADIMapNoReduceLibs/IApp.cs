@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PuppetAppLib
+namespace PADIMapNoReduceLibs
 {
-    public interface IAppPuppet
+    public interface IApp
     {
         void Submit(String entry_url, String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] mapObject);
     }                                                                                                                                                                                                                                                                             

@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace JobTrackerWorkerLib
+namespace PADIMapNoReduceLibs
 {
     public interface IWorkerJT
     {
         void SubmitJobToWorker(long start, long end, int split);
         bool SendMapper(String className, byte[] code);
+        void SubmitJob(long fileSize, int splits, String className, byte[] code);
     }
 }

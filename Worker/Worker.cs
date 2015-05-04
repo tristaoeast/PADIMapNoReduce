@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-using JobTrackerWorkerLib;
+using PADIMapNoReduceLibs;
 using JobTrackerClientLib;
 using System.Reflection;
 using WorkerClientLib;
@@ -16,12 +16,22 @@ namespace Worker
 {
     class Worker
     {
+        String jobTrackerURL = String.Empty;
         static void Main(string[] args)
         {
             //TODO: get port from args
             TcpChannel channel = new TcpChannel(10000);
             ChannelServices.RegisterChannel(channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
+
+            //Activation
+            WorkerServicesToJobTracker servicosToJobTracker = new WorkerServicesToJobTracker();
+            RemotingServices.Marshal(servicosToJobTracker, "W", typeof(WorkerServicesToJobTracker));
+
+            //Activation
+            WorkerServicesToClient servicosToClient = new WorkerServicesToClient();
+            RemotingServices.Marshal(servicosToClient, "W", typeof(WorkerServicesToClient));
+
+            //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
             System.Console.WriteLine("Press <enter> to terminate server...");
             System.Console.ReadLine();
         }
@@ -84,12 +94,15 @@ namespace Worker
                     }
                 }
             }
+        }
+    }
 
-
-
-
-
-
+    class WorkerServicesToClient : MarshalByRefObject, IWorkerC
+    {
+        public void SubmitJob(long fileSize, int splits, String className, byte[] code)
+        {
+            IJobTrackerW newJobTracker = (IJobTrackerW)Activator.GetObject(typeof(IJobTrackerW), "METER_URL_BEM");
+            newJobTracker.SubmitJob(fileSize, splits, className, code);
         }
     }
 
