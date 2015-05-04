@@ -1,5 +1,4 @@
-﻿using JobTrackerClientLib;
-using PADIMapNoReduceLibs;
+﻿using PADIMapNoReduceLibs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,8 +22,8 @@ namespace JobTracker
 
             JobTracker jt = new JobTracker();
             //Activation
-            JobTrackerServicesToWorker jtsw = new JobTrackerServicesToWorker(jt);
-            RemotingServices.Marshal(jtsw, "JT", typeof(JobTrackerServicesToWorker));
+            JobTrackerServices jts = new JobTrackerServices(jt);
+            RemotingServices.Marshal(jts, "JT", typeof(JobTrackerServices));
 
             Console.WriteLine("Press any key to exit");
             Console.ReadLine();
@@ -45,11 +44,11 @@ namespace JobTracker
 
     }
 
-    public class JobTrackerServicesToWorker : MarshalByRefObject, IJobTrackerW
+    public class JobTrackerServices : MarshalByRefObject, IJobTracker
     {
         public JobTracker jobTracker;
 
-        public JobTrackerServicesToWorker(JobTracker jt)
+        public JobTrackerServices(JobTracker jt)
         {
             jobTracker = jt;
         }

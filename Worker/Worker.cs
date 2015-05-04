@@ -7,9 +7,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using PADIMapNoReduceLibs;
-using JobTrackerClientLib;
 using System.Reflection;
-using WorkerClientLib;
 using System.IO;
 
 namespace Worker
@@ -20,16 +18,15 @@ namespace Worker
         static void Main(string[] args)
         {
             //TODO: get port from args
+
+            Worker w = new Worker();
+
             TcpChannel channel = new TcpChannel(10000);
             ChannelServices.RegisterChannel(channel, true);
 
             //Activation
-            WorkerServicesToJobTracker servicosToJobTracker = new WorkerServicesToJobTracker();
-            RemotingServices.Marshal(servicosToJobTracker, "W", typeof(WorkerServicesToJobTracker));
-
-            //Activation
-            WorkerServicesToClient servicosToClient = new WorkerServicesToClient();
-            RemotingServices.Marshal(servicosToClient, "W", typeof(WorkerServicesToClient));
+            WorkerServices ws = new WorkerServices(w);
+            RemotingServices.Marshal(ws, "W", typeof(WorkerServices));
 
             //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
             System.Console.WriteLine("Press <enter> to terminate server...");
@@ -37,11 +34,16 @@ namespace Worker
         }
     }
 
-    class WorkerServicesToJobTracker : MarshalByRefObject, IWorkerJT
+    class WorkerServices : MarshalByRefObject, IWorker
     {
-
+        Worker worker;
         object mapObject = null;
         Type mapType;
+
+        public WorkerServices(Worker w)
+        {
+            worker = w;
+        }
 
         public bool SendMapper(String className, byte[] code)
         {
@@ -66,7 +68,7 @@ namespace Worker
 
         public void SubmitJobToWorker(long start, long end, int split)
         {
-            IClientW client = (IClientW)Activator.GetObject(typeof(IClientW), "tcp://localhost:10001/C");
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
             byte[] fileSplitByte = client.GetSplit(start, end);
             while (mapObject == null) ;
             
@@ -95,15 +97,11 @@ namespace Worker
                 }
             }
         }
-    }
 
-    class WorkerServicesToClient : MarshalByRefObject, IWorkerC
-    {
         public void SubmitJob(long fileSize, int splits, String className, byte[] code)
         {
-            IJobTrackerW newJobTracker = (IJobTrackerW)Activator.GetObject(typeof(IJobTrackerW), "METER_URL_BEM");
+            IJobTracker newJobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), "METER_URL_BEM");
             newJobTracker.SubmitJob(fileSize, splits, className, code);
         }
     }
-
 }
