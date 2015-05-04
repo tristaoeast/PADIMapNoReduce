@@ -69,7 +69,7 @@ namespace PuppetMaster
 
         private void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
-            IAppPuppet app = (IAppPuppet)Activator.GetObject(typeof(IAppPuppet), "tcp://localhost:40001/U");
+            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:40001/U");
             app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
         }
 

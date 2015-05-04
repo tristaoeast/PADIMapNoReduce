@@ -1,4 +1,5 @@
 ﻿using MapLib;
+using PADIMapNoReduceLibs;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,8 +9,6 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
-using UserClientLib;
-using WorkerClientLib;
 
 namespace Client
 {
@@ -27,12 +26,8 @@ namespace Client
 
             Client cli = new Client();
             //Activation
-            ClientServicesToApp servicosToApp = new ClientServicesToApp(cli);
-            RemotingServices.Marshal(servicosToApp, "C", typeof(ClientServicesToApp));
-
-            //Activation
-            ClientServicesToWorker servicosToW = new ClientServicesToWorker(cli);
-            RemotingServices.Marshal(servicosToW, "C", typeof(ClientServicesToWorker));
+            ClientServices clientServices = new ClientServices(cli);
+            RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
         }
 
         public void SetEntryURL(String eURL) {
@@ -136,13 +131,13 @@ namespace Client
         //}
     }
 
-    public class ClientServicesToApp : MarshalByRefObject, IClientU
+    public class ClientServices : MarshalByRefObject, IClient
     {
         public Client client;
         String urlJobTracker = null;
         byte[] code;
 
-        public ClientServicesToApp(Client cli)
+        public ClientServices(Client cli)
         {
             client = cli;
         }
@@ -159,7 +154,7 @@ namespace Client
             Console.WriteLine("New Job submitted to JobTracker at" + urlJobTracker);
 
             client.SaveDirs(inputFile, outputDirectory);
-            IWorkerC newJobTracker = (IWorkerC)Activator.GetObject(typeof(IWorkerC), urlJobTracker);
+            IWorker newJobTracker = (IWorker)Activator.GetObject(typeof(IWorker), urlJobTracker);
 
             //client.setFileBytes();
 
@@ -167,16 +162,6 @@ namespace Client
             long fileSize = f.Length;
 
             newJobTracker.SubmitJob(fileSize, splits, className, code);
-        }
-    }
-
-    public class ClientServicesToWorker : MarshalByRefObject, IClientW
-    {
-        public static Client client;
-
-        public ClientServicesToWorker(Client cli)
-        {
-            client = cli;
         }
 
         public byte[] GetSplit(long start, long end)
