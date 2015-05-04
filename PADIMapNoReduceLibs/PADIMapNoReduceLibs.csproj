@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C3994D75-0863-40C6-973D-86BC4DF04942}</ProjectGuid>
+    <ProjectGuid>{456D2F1A-8921-4D0E-9A79-09825287CE24}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>PuppetAppLib</RootNamespace>
-    <AssemblyName>PuppetAppLib</AssemblyName>
+    <RootNamespace>PADIMapNoReduceLibs</RootNamespace>
+    <AssemblyName>PADIMapNoReduceLibs</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -40,6 +40,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IAppPuppet.cs" />
+    <Compile Include="IClientU.cs" />
+    <Compile Include="IClientW.cs" />
+    <Compile Include="IJobTrackerW.cs" />
+    <Compile Include="IWorkerC.cs" />
+    <Compile Include="IWorkerJT.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

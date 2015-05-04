@@ -4,10 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WorkerClientLib
+namespace PADIMapNoReduceLibs
 {
-    public interface IWorkerC
+    public interface IJobTracker
     {
+        IList<int> GetSplitRange();
         void SubmitJob(long fileSize, int splits, String className, byte[] code);
     }
 }

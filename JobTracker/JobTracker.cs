@@ -1,5 +1,5 @@
 ﻿using JobTrackerClientLib;
-using JobTrackerWorkerLib;
+using PADIMapNoReduceLibs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +38,11 @@ namespace JobTracker
             return splitsRange;
         }
 
+        public int getSentBytes() 
+        {
+            return sentBytes;
+        }
+
     }
 
     public class JobTrackerServicesToWorker : MarshalByRefObject, IJobTrackerW
@@ -57,6 +62,18 @@ namespace JobTracker
         void SubmitJob(long fileSize, int splits, String className, byte[] code)
 
         {
+            int sentBytes = jobTracker.getSentBytes();
+            if (sentBytes > fileSize)
+            {
+
+            }
+            else
+            { 
+
+            }
+
+            //IWorkerJT newWorker = (IWorkerJT)Activator.GetObject(typeof(IWorkerJT), "METER_URL_BEM");
+            //newWorker.SubmitJobToWorker(
             //implement
         }
     }
