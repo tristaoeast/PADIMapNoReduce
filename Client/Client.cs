@@ -14,11 +14,12 @@ using WorkerClientLib;
 
 namespace Client
 {
-    class Client
+    public class Client
     {
         String inputFile = null;
         String outputFile = null;
-        byte[] fileBytes;
+        //byte[] fileBytes;
+        String entryUrl;
 
         static void Main(string[] args)
         {
@@ -35,6 +36,9 @@ namespace Client
             RemotingServices.Marshal(servicosToW, "C", typeof(ClientServicesToWorker));
         }
 
+        public void SetEntryURL(String eURL) {
+            entryUrl = eURL;
+        }
 
         public void SaveDirs(String inputDir, String outputDir)
         {
@@ -47,18 +51,18 @@ namespace Client
             return outputFile;
         }
 
-        public void setFileBytes()
-        {
-            fileBytes = File.ReadAllBytes(inputFile);
-        }
+        //public void setFileBytes()
+        //{
+        //    fileBytes = File.ReadAllBytes(inputFile);
+        //}
 
-        public byte[] getFileBytes(long init, long end)
-        {
-            byte[] subset = new byte[end - init + 1];
-            Array.Copy(fileBytes, init, subset, 0, end - init + 1);
+        //public byte[] getFileBytes(long init, long end)
+        //{
+        //    byte[] subset = new byte[end - init + 1];
+        //    Array.Copy(fileBytes, init, subset, 0, end - init + 1);
 
-            return subset;
-        }
+        //    return subset;
+        //}
 
         public byte[] GetSplit(long startIndex, long endIndex)
         {
@@ -147,8 +151,9 @@ namespace Client
         public void Init(String entryURL)
         {
             urlJobTracker = entryURL;
+            client.SetEntryURL(entryURL);
         }
-        public void Submit(String inputFile, int splits, String outputDirectory, IMap mapObject)
+        public void Submit(String inputFile, int splits, String outputDirectory, String className, byte[] code)
         {
             while (String.IsNullOrEmpty(urlJobTracker)) ;
 
@@ -157,12 +162,12 @@ namespace Client
             client.SaveDirs(inputFile, outputDirectory);
             IJobTrackerC newJobTracker = (IJobTrackerC)Activator.GetObject(typeof(IJobTrackerC), urlJobTracker);
 
-            client.setFileBytes();
+            //client.setFileBytes();
 
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-            newJobTracker.submitJob(fileSize, splits);
+            newJobTracker.SubmitJob(fileSize, splits, className, code);
         }
     }
 

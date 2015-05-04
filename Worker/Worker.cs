@@ -19,15 +19,16 @@ namespace Worker
         String jobTrackerURL = String.Empty;
         static void Main(string[] args)
         {
+            //TODO: get port from args
             TcpChannel channel = new TcpChannel(10000);
             ChannelServices.RegisterChannel(channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "Worker", WellKnownObjectMode.Singleton);
+            RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
             System.Console.WriteLine("Press <enter> to terminate server...");
             System.Console.ReadLine();
         }
     }
 
-    class WorkerServices : MarshalByRefObject, IWorkerJT
+    class WorkerServicesToJobTracker : MarshalByRefObject, IWorkerJT
     {
 
         object mapObject = null;

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting;
@@ -34,17 +35,20 @@ namespace UserApplication
 
         }
 
-        public void Init(String entryUrl){
+        public void Init(String entryUrl)
+        {
+            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe");
             client = (IClientU)Activator.GetObject(typeof(IClientU), "tcp://localhost:10001/C");
             client.Init(entryUrl);
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
-        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, IMap mapObject){
+        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, IMap mapObject)
+        {
             client.Submit(inputFile, splits, outputDirectory, mapObject);
             tb_UserApp_debug.AppendText("Job submitted to client\r\n");
-        } 
- 
+        }
+
         private void bt_init_Click(object sender, EventArgs e)
         {
             String orig_url = tb_url_cli.Text;
@@ -52,10 +56,10 @@ namespace UserApplication
             String url = tb_url_cli.Text;
             url = url.Replace("://", ":");
 
-            char[] delimiterChars = {':', '/'};
+            char[] delimiterChars = { ':', '/' };
             string[] split_url = url.Split(delimiterChars);
 
-            if (Int32.Parse(split_url[2]) < 30001 || Int32.Parse(split_url[2]) > 39999 || split_url[3] != "W" )
+            if (Int32.Parse(split_url[2]) < 30001 || Int32.Parse(split_url[2]) > 39999 || split_url[3] != "W")
             {
                 tb_UserApp_debug.AppendText("Service out of range (Range between 30001 and 39999) or Object name wrong (shoul be 'W')\r\n");
             }
@@ -76,8 +80,8 @@ namespace UserApplication
         public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, IMap mapObject)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
-            form.Invoke(new DelSubmit(form.Submit), new Object[] {inputFile, outputDirectory, splits, mapClassName, mapObject });
+            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, mapObject });
         }
     }
-    
+
 }
