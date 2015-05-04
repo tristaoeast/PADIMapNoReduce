@@ -16,6 +16,7 @@ namespace Worker
 {
     class Worker
     {
+        String jobTrackerURL = String.Empty;
         static void Main(string[] args)
         {
             //TODO: get port from args
@@ -98,10 +99,10 @@ namespace Worker
 
     class WorkerServicesToClient : MarshalByRefObject, IWorkerC
     {
-        public void SubmitJob(long fileSize, int splits, String className, byte[] code) 
+        public void SubmitJob(long fileSize, int splits, String className, byte[] code)
         {
             IJobTrackerW newJobTracker = (IJobTrackerW)Activator.GetObject(typeof(IJobTrackerW), "METER_URL_BEM");
-            newJobTracker.submitJob(fileSize, splits, className, code);
+            newJobTracker.SubmitJob(fileSize, splits, className, code);
         }
     }
 
