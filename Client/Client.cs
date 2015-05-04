@@ -96,6 +96,43 @@ namespace Client
             }
             return result;
         }
+
+        //public IList<KeyValuePair<String, String>> GetSplit(long startIndex, long endIndex)
+        //{
+        //    var stream = new StreamReader(inputFile);
+        //    long start = startIndex, end = endIndex;
+        //    bool exitWhile = false;
+        //    long byteCounter = 0;
+        //    long lineCounter = 0;
+        //    IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
+        //    while (!stream.EndOfStream)
+        //    {
+        //        String line = stream.ReadLine();
+        //        byteCounter += line.Length + 2;
+        //        lineCounter++;
+        //        //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
+        //        if (byteCounter >= start + 1)
+        //        {
+        //            while (byteCounter <= end + 1)
+        //            {
+        //                //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
+        //                result.Add(new KeyValuePair<String, String>(lineCounter.ToString(), line));
+        //                //Read next line
+        //                if (!stream.EndOfStream)
+        //                {
+        //                    line = stream.ReadLine();
+        //                    byteCounter += line.Length + 2;
+        //                    lineCounter++;
+        //                }
+        //                else
+        //                    byteCounter = end + 10;
+        //            }
+        //            exitWhile = true;
+        //        }
+        //        if (exitWhile) break;
+        //    }
+        //    return result;
+        //}
     }
 
     public class ClientServicesToApp : MarshalByRefObject, IClientU

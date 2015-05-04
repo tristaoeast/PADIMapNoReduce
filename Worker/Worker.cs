@@ -10,6 +10,7 @@ using JobTrackerWorkerLib;
 using JobTrackerClientLib;
 using System.Reflection;
 using WorkerClientLib;
+using System.IO;
 
 namespace Worker
 {
@@ -25,7 +26,7 @@ namespace Worker
         }
     }
 
-    class WorkerServices : IWorkerJT
+    class WorkerServices : MarshalByRefObject, IWorkerJT
     {
 
         object mapObject = null;
@@ -50,33 +51,43 @@ namespace Worker
                 }
             }
             throw (new System.Exception("could not invoke method"));
-            return true;
         }
 
         public void SubmitJobToWorker(long start, long end, int split)
         {
-
             IClientW client = (IClientW)Activator.GetObject(typeof(IClientW), "tcp://localhost:10001/C");
-            byte[] fileSplit = client.GetSplit(start, end);
-
-            //TODO: CONVERT THE FILE SPLIT BYTES INTO A TEXT FILE...
-
+            byte[] fileSplitByte = client.GetSplit(start, end);
             while (mapObject == null) ;
-
-            // Dynamically Invoke the method
-            //object[] args = new object[] { "testValue" };
-            //object resultObject = mapType.InvokeMember("Map",
-            //  BindingFlags.Default | BindingFlags.InvokeMethod,
-            //       null,
-            //       mapObject,
-            //       args);
-            //IList<KeyValuePair<string, string>> result = (IList<KeyValuePair<string, string>>)resultObject;
-            //Console.WriteLine("Map call result was: ");
-            //foreach (KeyValuePair<string, string> p in result)
-            //{
-            //    Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
-            //}
             
+            // Converts byte[] into a string of the split
+            String fileSplit = Encoding.UTF8.GetString(fileSplitByte);
+
+            // Read each line from the string
+            using (StringReader reader = new StringReader(fileSplit))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    // Dynamically Invoke the method
+                    object[] args = new object[] {line};
+                    object resultObject = mapType.InvokeMember("Map",
+                      BindingFlags.Default | BindingFlags.InvokeMethod,
+                           null,
+                           mapObject,
+                           args);
+                    IList<KeyValuePair<string, string>> result = (IList<KeyValuePair<string, string>>)resultObject;
+                    Console.WriteLine("Map call result was: ");
+                    foreach (KeyValuePair<string, string> p in result)
+                    {
+                        Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
+                    }
+                }
+            }
+
+
+
+
+
 
         }
     }

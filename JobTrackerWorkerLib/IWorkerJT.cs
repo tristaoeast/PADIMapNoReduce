@@ -8,7 +8,7 @@ namespace JobTrackerWorkerLib
 {
     public interface IWorkerJT
     {
-        void SubmitJobToWorker();
+        void SubmitJobToWorker(long start, long end, int split);
         bool SendMapper(String className, byte[] code);
     }
 }

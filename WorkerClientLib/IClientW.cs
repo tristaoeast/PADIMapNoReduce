@@ -9,7 +9,7 @@ namespace WorkerClientLib
 {
     public interface IClientW
     {
-        IList<KeyValuePair<String, String>> GetSplit(long start, long end);
+        byte[] GetSplit(long start, long end);
         void ReturnResult(IList<KeyValuePair<string, string>> result, int split);
     }
 }
