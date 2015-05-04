@@ -1,5 +1,4 @@
-﻿using JobTrackerClientLib;
-using MapLib;
+﻿using MapLib;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -24,7 +23,7 @@ namespace Client
         static void Main(string[] args)
         {
             TcpChannel chan = new TcpChannel(10001);
-            ChannelServices.RegisterChannel(chan, false);
+            ChannelServices.RegisterChannel(chan, true);
 
             Client cli = new Client();
             //Activation
@@ -160,7 +159,7 @@ namespace Client
             Console.WriteLine("New Job submitted to JobTracker at" + urlJobTracker);
 
             client.SaveDirs(inputFile, outputDirectory);
-            IJobTrackerC newJobTracker = (IJobTrackerC)Activator.GetObject(typeof(IJobTrackerC), urlJobTracker);
+            IWorkerC newJobTracker = (IWorkerC)Activator.GetObject(typeof(IWorkerC), urlJobTracker);
 
             //client.setFileBytes();
 

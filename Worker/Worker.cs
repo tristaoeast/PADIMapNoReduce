@@ -21,7 +21,16 @@ namespace Worker
             //TODO: get port from args
             TcpChannel channel = new TcpChannel(10000);
             ChannelServices.RegisterChannel(channel, true);
-            RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
+
+            //Activation
+            WorkerServicesToJobTracker servicosToJobTracker = new WorkerServicesToJobTracker();
+            RemotingServices.Marshal(servicosToJobTracker, "W", typeof(WorkerServicesToJobTracker));
+
+            //Activation
+            WorkerServicesToClient servicosToClient = new WorkerServicesToClient();
+            RemotingServices.Marshal(servicosToClient, "W", typeof(WorkerServicesToClient));
+
+            //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
             System.Console.WriteLine("Press <enter> to terminate server...");
             System.Console.ReadLine();
         }
@@ -84,12 +93,15 @@ namespace Worker
                     }
                 }
             }
+        }
+    }
 
-
-
-
-
-
+    class WorkerServicesToClient : MarshalByRefObject, IWorkerC
+    {
+        public void SubmitJob(long fileSize, int splits, String className, byte[] code) 
+        {
+            IJobTrackerW newJobTracker = (IJobTrackerW)Activator.GetObject(typeof(IJobTrackerW), "METER_URL_BEM");
+            newJobTracker.submitJob(fileSize, splits, className, code);
         }
     }
 
