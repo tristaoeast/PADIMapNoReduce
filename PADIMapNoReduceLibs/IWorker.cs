@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PADIMapNoReduceLibs
 {
-    public interface IWorkerJT
+    public interface IWorker
     {
         void SubmitJobToWorker(long start, long end, int split);
         bool SendMapper(String className, byte[] code);
