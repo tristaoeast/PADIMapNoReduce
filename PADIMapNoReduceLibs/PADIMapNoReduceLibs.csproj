@@ -39,12 +39,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IAppPuppet.cs" />
-    <Compile Include="IClientU.cs" />
-    <Compile Include="IClientW.cs" />
-    <Compile Include="IJobTrackerW.cs" />
-    <Compile Include="IWorkerC.cs" />
-    <Compile Include="IWorkerJT.cs" />
+    <Compile Include="IApp.cs" />
+    <Compile Include="IClient.cs" />
+    <Compile Include="IJobTracker.cs" />
+    <Compile Include="IWorker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
