@@ -34,6 +34,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -81,6 +82,10 @@
     <ProjectReference Include="..\MapLib\MapLib.csproj">
       <Project>{d7eedd6f-827e-4088-a3e9-0eb0cfa65a2d}</Project>
       <Name>MapLib</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\PADIMapNoReduceLibs\PADIMapNoReduceLibs.csproj">
+      <Project>{456d2f1a-8921-4d0e-9a79-09825287ce24}</Project>
+      <Name>PADIMapNoReduceLibs</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

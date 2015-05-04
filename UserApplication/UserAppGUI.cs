@@ -13,13 +13,12 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using UserClientLib;
 
 namespace UserApplication
 {
     public partial class UserAppGUI : Form
     {
-        IClientU client;
+        IClient client;
 
         public UserAppGUI()
         {
@@ -38,7 +37,7 @@ namespace UserApplication
         public void Init(String entryUrl)
         {
             Process.Start(@"..\..\..\Client\bin\Debug\Client.exe");
-            client = (IClientU)Activator.GetObject(typeof(IClientU), "tcp://localhost:10001/C");
+            client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
             client.Init(entryUrl);
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
@@ -73,7 +72,7 @@ namespace UserApplication
     delegate void DelInit(String entryUrl);
     delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, IMap mapObject);
 
-    public class UserAppServices : MarshalByRefObject, IAppPuppet
+    public class UserAppServices : MarshalByRefObject, IApp
     {
         public static UserAppGUI form;
 
