@@ -12,8 +12,9 @@ namespace JobTracker
 {
     class JobTracker
     {
-        int sentBytes = 0;
-        int fileSize = 0;
+        long sentBytes = 0;
+        int sentSplits = 0;
+        long fileSize = 0;
         int nSplits = 0;
         static void Main(string[] args)
         {
@@ -37,9 +38,19 @@ namespace JobTracker
             return splitsRange;
         }
 
-        public int getSentBytes() 
+        public long getSentBytes() 
         {
             return sentBytes;
+        }
+
+        public long getFileSize()
+        {
+            return fileSize;
+        }
+
+        public int getSentSplits() 
+        {
+            return sentSplits;
         }
 
     }
@@ -55,25 +66,42 @@ namespace JobTracker
 
         IList<int> GetSplitRange()
         {
+            //implementarrrrr
+            long sentBytes = jobTracker.getSentBytes();
+            if (sentBytes > jobTracker.getFileSize())
+            {
+
+            }
+            else
+            {
+
+            }
             return jobTracker.GetSplitRange();
         }
 
         void SubmitJob(long fileSize, int splits, String className, byte[] code)
 
         {
-            int sentBytes = jobTracker.getSentBytes();
-            if (sentBytes > fileSize)
+             
+            decimal a = fileSize/splits;
+            long b = (int) System.Math.Round(a);
+            //ver o número de workers disponíveis e para cara enviar o um split
+            //ex
+            int nWorkers = 2;
+
+            long c = 0;
+            int sentSplits = jobTracker.getSentSplits();
+            for (int i = 0; i < nWorkers; i++)
             {
+                //enviar 1 split a cada worker
+                IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), "METER_URL_BEM");
+                newWorker.SubmitJobToWorker(c, c+b, sentSplits);
 
+                sentSplits++;
+                c += b;
             }
-            else
-            { 
 
-            }
-
-            //IWorkerJT newWorker = (IWorkerJT)Activator.GetObject(typeof(IWorkerJT), "METER_URL_BEM");
-            //newWorker.SubmitJobToWorker(
-            //implement
+            //set dos sent bytes e splits
         }
     }
 
