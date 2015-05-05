@@ -42,6 +42,7 @@
     <Compile Include="IApp.cs" />
     <Compile Include="IClient.cs" />
     <Compile Include="IJobTracker.cs" />
+    <Compile Include="IPuppetMaster.cs" />
     <Compile Include="IWorker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

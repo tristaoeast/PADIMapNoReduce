@@ -97,6 +97,7 @@
             this.bt_loadScript.TabIndex = 6;
             this.bt_loadScript.Text = "Load";
             this.bt_loadScript.UseVisualStyleBackColor = true;
+            this.bt_loadScript.Click += new System.EventHandler(this.bt_loadScript_Click);
             // 
             // PuppetMasterGUI
             // 

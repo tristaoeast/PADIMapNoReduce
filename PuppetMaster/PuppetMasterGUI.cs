@@ -17,7 +17,6 @@ namespace PuppetMaster
     public partial class PuppetMasterGUI : Form
     {
         private String command;
-        private String[] args;
 
         public PuppetMasterGUI()
         {
@@ -43,23 +42,23 @@ namespace PuppetMaster
             }
             else if (command.Equals("Worker", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("Wait", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("SlowW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -125,5 +124,5 @@ namespace PuppetMaster
 
     }
 
-    public class PuppetMasterServices : MarshalByRefObject { }
+    public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster { }
 }

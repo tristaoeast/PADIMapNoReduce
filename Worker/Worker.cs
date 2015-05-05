@@ -15,11 +15,28 @@ namespace Worker
     class Worker
     {
         String jobTrackerURL = String.Empty;
+        String clientURL = String.Empty;
+
         static void Main(string[] args)
         {
-            //TODO: get port from args
-
             Worker w = new Worker();
+
+            if (args.Length < 2)
+            {
+                Console.WriteLine("Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <JOBTRACKER-URL> ");
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
+            else if (3 == args.Length)
+            {
+                //WARN JT THAT STARTED
+                w.setJobTrackerURL(args[2]);
+            }
+            //TODO: get port from service url
+
+            string[] split1 = args[1].Split(':');
+            string[] split2 = split1[1].Split('/');
 
             TcpChannel channel = new TcpChannel(10000);
             ChannelServices.RegisterChannel(channel, true);
@@ -31,6 +48,11 @@ namespace Worker
             //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
             System.Console.WriteLine("Press <enter> to terminate server...");
             System.Console.ReadLine();
+        }
+
+        void setJobTrackerURL(string url)
+        {
+            jobTrackerURL = url;
         }
     }
 
@@ -71,7 +93,7 @@ namespace Worker
             IClient client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
             byte[] fileSplitByte = client.GetSplit(start, end);
             while (mapObject == null) ;
-            
+
             // Converts byte[] into a string of the split
             String fileSplit = Encoding.UTF8.GetString(fileSplitByte);
 
@@ -82,7 +104,7 @@ namespace Worker
                 while ((line = reader.ReadLine()) != null)
                 {
                     // Dynamically Invoke the method
-                    object[] args = new object[] {line};
+                    object[] args = new object[] { line };
                     object resultObject = mapType.InvokeMember("Map",
                       BindingFlags.Default | BindingFlags.InvokeMethod,
                            null,
