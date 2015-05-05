@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace PADIMapNoReduceLibs
 {
-    interface IPuppetMaster
+    public interface IPuppetMaster
     {
-        //TODO: Preencher argumentos que recebe
-        //void Worker();
+        String Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl);
     }
 }
