@@ -8,8 +8,8 @@ namespace PADIMapNoReduceLibs
 {
     public interface IWorker
     {
-        void SubmitJobToWorker(long start, long end, int split);
+        void SubmitJobToWorker(long start, long end, int split, String clientURL);
         bool SendMapper(String className, byte[] code);
-        void SubmitJob(long fileSize, int splits, String className, byte[] code);
+        void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     }
 }

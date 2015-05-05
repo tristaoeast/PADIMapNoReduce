@@ -31,28 +31,34 @@ namespace Worker
             else if (3 == args.Length)
             {
                 //WARN JT THAT STARTED
-                w.setJobTrackerURL(args[2]);
+                w.SetJobTrackerURL(args[2]);
             }
+            
             //TODO: get port from service url
-
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[1].Split('/');
+            int port = Int32.Parse(split2[0]);
 
-            TcpChannel channel = new TcpChannel(10000);
+            TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
             //Activation
-            WorkerServices ws = new WorkerServices(w);
-            RemotingServices.Marshal(ws, "W", typeof(WorkerServices));
+            WorkerServices workerServices = new WorkerServices(w);
+            RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
 
             //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
-            System.Console.WriteLine("Press <enter> to terminate server...");
+            System.Console.WriteLine("Press <enter> to terminate worker with id" + args[0] + "...");
             System.Console.ReadLine();
         }
 
-        void setJobTrackerURL(string url)
+        void SetJobTrackerURL(string url)
         {
             jobTrackerURL = url;
+        }
+
+        public string GetJobTrackerURL()
+        {
+            return jobTrackerURL;
         }
     }
 
@@ -88,9 +94,10 @@ namespace Worker
             throw (new System.Exception("could not invoke method"));
         }
 
-        public void SubmitJobToWorker(long start, long end, int split)
+        public void SubmitJobToWorker(long start, long end, int split, string clientURL)
         {
-            IClient client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
+            // Client URL must be something like "tcp://localhost:10001/C"
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             byte[] fileSplitByte = client.GetSplit(start, end);
             while (mapObject == null) ;
 
@@ -120,10 +127,10 @@ namespace Worker
             }
         }
 
-        public void SubmitJob(long fileSize, int splits, String className, byte[] code)
+        public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            IJobTracker newJobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), "METER_URL_BEM");
-            newJobTracker.SubmitJob(fileSize, splits, className, code);
+            IJobTracker newJobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), worker.GetJobTrackerURL());
+            newJobTracker.SubmitJob(fileSize, splits, className, code, clientURL);
         }
     }
 }
