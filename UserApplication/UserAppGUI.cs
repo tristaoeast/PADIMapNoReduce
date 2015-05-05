@@ -29,8 +29,8 @@ namespace UserApplication
             ChannelServices.RegisterChannel(chan, false);
 
             //Activation
-            UserAppServices servicosToPuppet = new UserAppServices();
-            RemotingServices.Marshal(servicosToPuppet, "U", typeof(UserAppServices));
+            UserAppServices appServices = new UserAppServices();
+            RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
 
         }
 
