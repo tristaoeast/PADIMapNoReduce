@@ -20,6 +20,7 @@ namespace JobTracker
         long finalSizeSplit = 0;
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
+        public delegate void DelegateWorkToWorker(int id);
 
         static void Main(string[] args)
         {
@@ -40,26 +41,10 @@ namespace JobTracker
             IList<int> splitsRange = new List<int>();
             //inicio, fim e numero do split
 
-            if (sentSplits >= nSplits)
-            {
-                //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
-            }
-            else
-            {
-                if (sentBytes > fileSize)
-                {
-
-                }
-                else
-                {
-
-                }
-            }
-
             return splitsRange;
         }
 
-        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code) 
+        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL) 
         {
             decimal sizeSplit = fileSize / splits;
             finalSizeSplit = (int)System.Math.Round(sizeSplit);
@@ -71,9 +56,9 @@ namespace JobTracker
             for (int i = 0; i < nWorkers; i++)
             {
                 //enviar 1 split a cada worker
-                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, "URL_CLIENT", i);
+                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, i);
                 sentSplits++;
-                sentBytes += finalSizeSplit;
+                sentBytes += finalSizeSplit + 1;
             }
         }
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
@@ -83,14 +68,44 @@ namespace JobTracker
 
             AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
-            remoteDel.BeginInvoke(start, end, split, "CLIENT URL ENVIAR", null, null);
+            remoteDel.BeginInvoke(start, end, split, clientURL, null, null);
         }
 
         private void CallBack(IAsyncResult ar)
         {
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
             int id = (int)rad.EndInvoke(ar);
+            DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
+            delegateWorkToWorker(id);
+            //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
+        }
 
+        private void ManageWorkToWorker(int id)
+        {
+            if (sentSplits >= nSplits)
+            {
+                //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
+                //afinal já não deve ser preciso para para já fica aqui :)
+            }
+            else
+            {
+                long end = sentBytes + finalSizeSplit;
+                if (end > fileSize)
+                {
+                    //long newEnd = (fileSize - sentBytes) + sentBytes;
+                    //os bytes foram todos enviados! logo
+                    SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, "CLIENT URL", id);
+                    sentBytes = fileSize;
+                    sentSplits++;
+                    
+                }
+                else
+                {
+                    SubmitJobToWorker(sentBytes, end, sentSplits + 1, "CLIENT URL", id);
+                    sentBytes += finalSizeSplit + 1;
+                    sentSplits++;
+                }
+            }
         }
 
         public long getSentBytes() 
@@ -143,9 +158,9 @@ namespace JobTracker
             return jobTracker.GetSplitRange();
         }
 
-        void SubmitJob(long fileSize, int splits, String className, byte[] code)
+        void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            jobTracker.NewSubmitJob(fileSize, splits, className, code);
+            jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
     }
 
