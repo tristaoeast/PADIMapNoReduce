@@ -18,6 +18,7 @@ namespace Client
         String outputFile = null;
         //byte[] fileBytes;
         String entryUrl;
+        String clientURL;
 
         static void Main(string[] args)
         {
@@ -161,7 +162,7 @@ namespace Client
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-            newJobTracker.SubmitJob(fileSize, splits, className, code);
+            newJobTracker.SubmitJob(fileSize, splits, className, code, clientURL);
         }
 
         public byte[] GetSplit(long start, long end)

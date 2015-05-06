@@ -13,7 +13,8 @@ using System.IO;
 namespace Worker
 {
 
-    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string,string>> result, int split);
+    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string, string>> result, int split);
+    public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
 
     class Worker
     {
@@ -27,20 +28,17 @@ namespace Worker
 
             if (args.Length < 2)
             {
-                Console.WriteLine("Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <JOBTRACKER-URL> ");
+                Console.WriteLine("Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <ENTRY-URL> ");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
             }
-            else if (3 == args.Length)
-            {
-                //WARN JT THAT STARTED
-                w.SetJobTrackerURL(args[2]);
-            }
-
+   
             w.setId(Int32.Parse(args[0]));
 
-            //TODO: get port from service url
+            //TODO: IF ENTRY_URL == JOBTRACKER_URL set jturl ELSE REGISTER WITH ENTRY URL
+
+
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
@@ -51,7 +49,7 @@ namespace Worker
             WorkerServices workerServices = new WorkerServices(w);
             RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
 
-            //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
+
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + "...");
             System.Console.ReadLine();
         }
@@ -81,11 +79,19 @@ namespace Worker
             clientURL = url;
         }
 
-        public void sendResultToClient(IList<KeyValuePair<string,string>> result, int split, string url) {
+        public void SendResultToClient(IList<KeyValuePair<string, string>> result, int split, string url)
+        {
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             remoteDel.BeginInvoke(result, split, null, null);
+        }
+
+        public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
+        {
+            IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+            RADSubmitJobToTracker remoteDel = new RADSubmitJobToTracker(jobTracker.SubmitJob);
+            remoteDel.BeginInvoke(fileSize, splits, className, code, clientURL, null, null);
         }
     }
 
@@ -125,7 +131,7 @@ namespace Worker
         {
             worker.SetClientURL(clientURL);
 
-            IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String,String>>();
+            IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
 
             // Client URL must be something like "tcp://localhost:10001/C"
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
@@ -162,14 +168,13 @@ namespace Worker
                     Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
                 }
             }
-            worker.sendResultToClient(result, split, clientURL);
+            worker.SendResultToClient(result, split, clientURL);
             return worker.getId();
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            IJobTracker newJobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), worker.GetJobTrackerURL());
-            newJobTracker.SubmitJob(fileSize, splits, className, code, clientURL);
+            worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
         }
     }
 }
