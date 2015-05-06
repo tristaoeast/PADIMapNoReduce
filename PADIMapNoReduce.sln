@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster", "PuppetMaster\PuppetMaster.csproj", "{836563E0-FB84-4628-BDC6-49CBC76E52C3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3AB1B935-4807-49C6-878E-BEC3FB227090} = {3AB1B935-4807-49C6-878E-BEC3FB227090}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserApplication", "UserApplication\UserApplication.csproj", "{E10EEDB2-8168-41B1-8C6B-717B81B66396}"
 EndProject

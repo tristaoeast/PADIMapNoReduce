@@ -8,6 +8,6 @@ namespace PADIMapNoReduceLibs
 {
     public interface IPuppetMaster
     {
-        String Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl);
+        String Worker(String id, String serviceUrl, String entryUrl);
     }
 }

@@ -33,10 +33,18 @@ namespace Worker
                 //WARN JT THAT STARTED
                 w.SetJobTrackerURL(args[2]);
             }
-            
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                Console.WriteLine("arg[" + i + "] == " + args[i]);
+            }
+
             //TODO: get port from service url
             string[] split1 = args[1].Split(':');
-            string[] split2 = split1[1].Split('/');
+            Console.WriteLine("SPLIT1[2]: " + split1[2]);
+            string[] split2 = split1[2].Split('/');
+            Console.WriteLine("SPLIT2[0]: " + split2[0]);
+            Console.ReadLine();
             int port = Int32.Parse(split2[0]);
 
             TcpChannel channel = new TcpChannel(port);
@@ -47,7 +55,7 @@ namespace Worker
             RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
 
             //RemotingConfiguration.RegisterWellKnownServiceType(typeof(IWorkerJT), "W", WellKnownObjectMode.Singleton);
-            System.Console.WriteLine("Press <enter> to terminate worker with id" + args[0] + "...");
+            System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + "...");
             System.Console.ReadLine();
         }
 
