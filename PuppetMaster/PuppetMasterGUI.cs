@@ -13,6 +13,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -82,6 +83,7 @@ namespace PuppetMaster
             else if (command.Equals("Wait", StringComparison.InvariantCultureIgnoreCase))
             {
                 //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //Wait(Int32.Parse(split[1]);
             }
             else if (command.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -150,6 +152,13 @@ namespace PuppetMaster
             Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
+        public void Wait(int secs) 
+        {
+            int interval = secs * 1000; //the call is in milliseconds
+            //TODO: put the command processing stuff to sleep for x secs
+            //someThread.sleep(secs);
+        }
+
         private void bt_loadScript_Click(object sender, EventArgs e)
         {
             String pathToScript;
@@ -158,7 +167,7 @@ namespace PuppetMaster
             {
                 pathToScript = tb_loadScript.Text;
                 String line;
-
+                
                 System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
                 while ((line = file.ReadLine()) != null)
                 {
@@ -211,11 +220,6 @@ namespace PuppetMaster
     public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster
     {
         public static PuppetMasterGUI form;
-
-        //public PuppetMasterServices(PuppetMasterGUI f)
-        //{
-        //    form = f;
-        //}
 
         public String Worker(String id, String serviceUrl, String entryUrl)
         {
