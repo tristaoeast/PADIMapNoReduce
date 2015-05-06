@@ -13,7 +13,7 @@ using System.IO;
 namespace Worker
 {
 
-
+    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string,string>>, int split);
 
     class Worker
     {
@@ -74,12 +74,11 @@ namespace Worker
             clientURL = url;
         }
 
-        public void sendResultToClient(IList<KeyValuePair<string,string>> result) {
-            IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
-
+        public void sendResultToClient(IList<KeyValuePair<string,string>> result, int split, string url) {
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
-            RemoteAsyncDelegateNewWorker remoteDel = new RemoteAsyncDelegateNewWorker(client.ReturnResult);
-            remoteDel.BeginInvoke(id, serviceUrl, entryUrl, null, null);
+            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
+            remoteDel.BeginInvoke(result, split, null, null);
         }
     }
 
@@ -156,8 +155,7 @@ namespace Worker
                     Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
                 }
             }
-
-            worker.sendResultToClient(result);
+            worker.sendResultToClient(result, split, clientURL);
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
