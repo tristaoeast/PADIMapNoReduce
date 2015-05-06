@@ -11,12 +11,17 @@ using System.Linq;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace PuppetMaster
 {
+
+    public delegate String RemoteAsyncDelegateNewWorker(String id, String serviceUrl, String entryUrl);
+    public delegate void FormWriteToOutput(String text);
+
     public partial class PuppetMasterGUI : Form
     {
         private String command;
@@ -31,17 +36,18 @@ namespace PuppetMaster
             InitializeComponent();
 
             //PuppetMasterServices.form = this;
-
+            PuppetMasterServices.form = this;
             chan = new TcpChannel(port);
             ChannelServices.RegisterChannel(chan, true);
 
+
             //Activation
-            appServices = new PuppetMasterServices(this);
+            appServices = new PuppetMasterServices();
             RemotingServices.Marshal(appServices, "PM", typeof(PuppetMasterServices));
 
-            debuuug("PM Services activated");
+            dbg("PM Services activated");
         }
-        public void debuuug(String text)
+        public void dbg(String text)
         {
             tb_Output.AppendText(text + Environment.NewLine);
         }
@@ -49,7 +55,7 @@ namespace PuppetMaster
         { //TODO: adicionar regra para ignorar linha quando começa por %
             String[] split = submText.Split(null);
             command = split[0];
-           // tb_Output.AppendText("Command: "+ command +"\r\n");
+            // tb_Output.AppendText("Command: "+ command +"\r\n");
             if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length == 7)
@@ -66,9 +72,12 @@ namespace PuppetMaster
                 if (split.Length < 4)
                 {
                     tb_Output.AppendText("Wrong number of args. Worker command must have at least 3 arguments");
-                } else
-                 //   tb_Output.AppendText(split[1] + " " + split[2] + " " + split[3] + " " + split[split.Length - 1]);
-                    Worker(split[1], split[2], split[3], split[split.Length-1]);
+                }
+                else
+                {
+                    //   tb_Output.AppendText(split[1] + " " + split[2] + " " + split[3] + " " + split[split.Length - 1]);
+                    Worker(split[1], split[2], split[3], split[split.Length - 1]);
+                }
             }
             else if (command.Equals("Wait", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -113,19 +122,30 @@ namespace PuppetMaster
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
         {
-            debuuug("Start Worker Remote Call... "+ puppetMasterUrl);
+            dbg("Start Worker Remote Call... " + puppetMasterUrl);
             IPuppetMaster puppetW = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppetMasterUrl);
-            debuuug("1");
-            debuuug(puppetW.Worker(id, puppetMasterUrl, serviceUrl, entryUrl));
-            debuuug("2");
+
+            AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
+            RemoteAsyncDelegateNewWorker remoteDel = new RemoteAsyncDelegateNewWorker(puppetW.Worker);
+            IAsyncResult ar = remoteDel.BeginInvoke(id, serviceUrl, entryUrl,
+                                                        asyncCallback, null);
+
+            //puppetW.Worker(id, serviceUrl, entryUrl);
             jobTrackerUrl = entryUrl;
-            debuuug("End Worker Remote Call.. ");
+            dbg("End Worker Remote Call.. ");
+        }
+
+        public void CallBack(IAsyncResult ar)
+        {
+            RemoteAsyncDelegateNewWorker rad = (RemoteAsyncDelegateNewWorker)((AsyncResult)ar).AsyncDelegate;
+            String s = (String)rad.EndInvoke(ar);
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { s });
         }
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
         {
-            debuuug("Start Worker Proc ");
-            Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id+" "+serviceUrl+" "+jobTrackerUrl);
+            dbg("Start Worker Proc ");
+            Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
         private void bt_loadScript_Click(object sender, EventArgs e)
@@ -154,11 +174,12 @@ namespace PuppetMaster
             //Process.Start(@"Z:\Documents\Visual Studio 2012\Projects\PADIMapNoReduce\JobTracker\bin\Debug\JobTracker.exe");
             //Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe");
 
-            String submittedText;
+            String submittedText = "WORKER 1 tcp://localhost:20001/PM tcp://localhost:30001/W";
             if (!string.IsNullOrWhiteSpace(tb_Submit.Text))
             {
-                submittedText = tb_Submit.Text;
-                processCommand(submittedText);              
+
+                //submittedText = tb_Submit.Text;
+                processCommand(submittedText);
             }
             else
                 tb_Output.AppendText("Please enter a command\r\n");
@@ -167,30 +188,28 @@ namespace PuppetMaster
     }
 
     public delegate void DelWorker(String id, String serviceUrl, String entryUrl);
-    public delegate void DelDebug(String cenas);
+    public delegate void DelDebug(string cenas);
 
-    public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster 
+    public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster
     {
         public static PuppetMasterGUI form;
 
-        public PuppetMasterServices(PuppetMasterGUI f)
+        //public PuppetMasterServices(PuppetMasterGUI f)
+        //{
+        //    form = f;
+        //}
+
+        public String Worker(String id, String serviceUrl, String entryUrl)
         {
-            form = f;
-        }
+            DelDebug del = new DelDebug(form.dbg);
 
-        public String Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
-        {
-            DelDebug del = new DelDebug(form.debuuug);
+            //form.Invoke(del, new object[] { "Received ID: " + id + " ServiceURL: " + serviceUrl + " EntryURL: " + entryUrl });
+            form.Invoke(new DelWorker(form.startWorkerProc), new Object[] {id, serviceUrl, entryUrl});
 
-            form.Invoke(del, new object[] { "chegueiii 3" });
 
-            if (del == null)
-                return "faaaail";
-            else return "ola";
+            return "Sucessfully launched a new Worker";
 
-            //form.Invoke(del, new Object[] {"chegueiii 3"});
-            //form.Invoke(new DelWorker(form.startWorkerProc), new Object[] {id, serviceUrl, entryUrl});
-            
+
         }
     }
 }
