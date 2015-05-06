@@ -46,7 +46,7 @@ namespace PuppetMaster
             tb_Output.AppendText(text + Environment.NewLine);
         }
         private void processCommand(String submText)
-        {
+        { //TODO: adicionar regra para ignorar linha quando começa por %
             String[] split = submText.Split(null);
             command = split[0];
            // tb_Output.AppendText("Command: "+ command +"\r\n");
