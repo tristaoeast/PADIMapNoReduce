@@ -181,7 +181,7 @@ namespace Client
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-            newWorker.SubmitJobToTracker(fileSize, splits, className, code, cli.getClientURL());
+            newWorker.SubmitJobToTracker(fileSize, splits, className, code, client.getClientURL());
 
         }
 
