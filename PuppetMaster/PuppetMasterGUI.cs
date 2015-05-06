@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -31,6 +32,7 @@ namespace PuppetMaster
         private int port = 20001;
         TcpChannel chan;
         PuppetMasterServices appServices;
+        int clientPortCounter = 10000;
 
         public PuppetMasterGUI()
         {
@@ -53,11 +55,11 @@ namespace PuppetMaster
             tb_Output.AppendText(text + Environment.NewLine);
         }
         private void processCommand(String submText)
-        { 
+        {
             String[] split = submText.Split(null);
             command = split[0];
             if (command.Equals("%", StringComparison.InvariantCultureIgnoreCase))
-                tb_Output.AppendText("Ignoring line..."+Environment.NewLine);
+                tb_Output.AppendText("Ignoring line..." + Environment.NewLine);
             else if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
                 tb_Output.AppendText(Environment.CurrentDirectory + Environment.NewLine);
@@ -120,9 +122,22 @@ namespace PuppetMaster
 
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
+            clientPortCounter++;
+            Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter + "/U" + " " + "tcp://localhost:" + clientPortCounter + "/C");
+            for (int i = 0; i < 1000000; i++)
+            {
+                int j = 10000 / 3000;
+            }
             //TODO: arrancar processo da app antes desta cangalhada toda
-            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:40001/U");
-            app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
+            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter + "/U");
+            try
+            {
+                app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
+            }
+            catch (SocketException e)
+            {
+                tb_Output.AppendText(e.ErrorCode.ToString());
+            }
         }
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
@@ -138,7 +153,7 @@ namespace PuppetMaster
             jobTrackerUrl = entryUrl;
             dbg("End Worker Remote Call.. ");
         }
-        
+
         //We aren't using this since we don't want to return anything. But it works as a reminder/example of how to
         public void CallBack(IAsyncResult ar)
         {
@@ -155,7 +170,7 @@ namespace PuppetMaster
             Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
-        public void Wait(int secs) 
+        public void Wait(int secs)
         {
             int interval = secs * 1000; //the call is in milliseconds
             //TODO: put the command processing stuff to sleep for x secs
@@ -170,7 +185,7 @@ namespace PuppetMaster
             {
                 pathToScript = tb_loadScript.Text;
                 String line;
-                
+
                 System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
                 while ((line = file.ReadLine()) != null)
                 {
@@ -179,7 +194,7 @@ namespace PuppetMaster
                 }
             }
             else
-                tb_Output.AppendText("Please enter a command"+Environment.NewLine);
+                tb_Output.AppendText("Please enter a command" + Environment.NewLine);
         }
 
         private void bt_submit_Click(object sender, EventArgs e)
@@ -193,7 +208,7 @@ namespace PuppetMaster
                 processCommand(submittedText);
             }
             else
-                tb_Output.AppendText("Please enter a command"+Environment.NewLine);
+                tb_Output.AppendText("Please enter a command" + Environment.NewLine);
         }
 
         private void bt_pmPort_Click(object sender, EventArgs e)
@@ -212,8 +227,10 @@ namespace PuppetMaster
                     tb_Output.AppendText("Requested Port out of range! Must be between 20001 and 29999" + Environment.NewLine);
             }
             else
-                tb_Output.AppendText("Default PuppetMaster port 20001 being used" + Environment.NewLine);                   
+                tb_Output.AppendText("Default PuppetMaster port 20001 being used" + Environment.NewLine);
         }
+
+
 
     }
 
@@ -229,7 +246,7 @@ namespace PuppetMaster
             DelDebug del = new DelDebug(form.dbg);
 
             //form.Invoke(del, new object[] { "Received ID: " + id + " ServiceURL: " + serviceUrl + " EntryURL: " + entryUrl });
-            form.Invoke(new DelWorker(form.startWorkerProc), new Object[] {id, serviceUrl, entryUrl});
+            form.Invoke(new DelWorker(form.startWorkerProc), new Object[] { id, serviceUrl, entryUrl });
 
             return "Sucessfully launched a new Worker";
         }

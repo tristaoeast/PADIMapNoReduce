@@ -22,25 +22,27 @@ namespace Client
 
         static void Main(string[] args)
         {
-            TcpChannel chan = new TcpChannel(10001);
-            ChannelServices.RegisterChannel(chan, true);
+            //TcpChannel chan = new TcpChannel(10001);
+            //ChannelServices.RegisterChannel(chan, true);
 
             Client cli = new Client();
 
-            if(args.Length < 1) {
-                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: CLIENT <CLIENT-URL>");
+            if (args.Length < 3)
+            {
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: CLIENT <PORT> <USERAPP-URL> <CLIENT-URL>");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
             }
 
-            cli.setClientURL(args[0]);
+            cli.setClientURL(args[2]);
             //Activation
             ClientServices clientServices = new ClientServices(cli);
             RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
         }
 
-        public void SetEntryURL(String eURL) {
+        public void SetEntryURL(String eURL)
+        {
             entryUrl = eURL;
         }
 
@@ -112,43 +114,6 @@ namespace Client
             //result = result.Remove(result.Length - System.Environment.NewLine.Length);
             return Encoding.UTF8.GetBytes(result);
         }
-
-        //public IList<KeyValuePair<String, String>> GetSplit(long startIndex, long endIndex)
-        //{
-        //    var stream = new StreamReader(inputFile);
-        //    long start = startIndex, end = endIndex;
-        //    bool exitWhile = false;
-        //    long byteCounter = 0;
-        //    long lineCounter = 0;
-        //    IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
-        //    while (!stream.EndOfStream)
-        //    {
-        //        String line = stream.ReadLine();
-        //        byteCounter += line.Length + 2;
-        //        lineCounter++;
-        //        //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
-        //        if (byteCounter >= start + 1)
-        //        {
-        //            while (byteCounter <= end + 1)
-        //            {
-        //                //Console.WriteLine("bc:" + byteCounter + " lc:" + lineCounter + " line:" + line);
-        //                result.Add(new KeyValuePair<String, String>(lineCounter.ToString(), line));
-        //                //Read next line
-        //                if (!stream.EndOfStream)
-        //                {
-        //                    line = stream.ReadLine();
-        //                    byteCounter += line.Length + 2;
-        //                    lineCounter++;
-        //                }
-        //                else
-        //                    byteCounter = end + 10;
-        //            }
-        //            exitWhile = true;
-        //        }
-        //        if (exitWhile) break;
-        //    }
-        //    return result;
-        //}
     }
 
     public class ClientServices : MarshalByRefObject, IClient

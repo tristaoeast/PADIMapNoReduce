@@ -20,12 +20,30 @@ namespace UserApplication
     {
         IClient client;
 
+        int port;
+        String userAppURL;
+        String clientURL;
+
         public UserAppGUI()
         {
             InitializeComponent();
             UserAppServices.form = this;
 
-            TcpChannel chan = new TcpChannel(40001);
+            string[] args = Environment.GetCommandLineArgs();
+
+            if (args.Length < 3)
+            {
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
+
+            clientURL = args[2];
+            userAppURL = args[1];
+            port = Int32.Parse(args[0]);
+
+            TcpChannel chan = new TcpChannel(port);
             ChannelServices.RegisterChannel(chan, false);
 
             //Activation
@@ -36,7 +54,7 @@ namespace UserApplication
 
         public void Init(String entryUrl)
         {
-            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe");
+            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", port + " " + userAppURL + " " + clientURL);
             client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
             client.Init(entryUrl);
             tb_UserApp_debug.AppendText("Client initialized\r\n");
