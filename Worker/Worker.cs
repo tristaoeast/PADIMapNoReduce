@@ -9,12 +9,14 @@ using System.Runtime.Remoting.Channels.Tcp;
 using PADIMapNoReduceLibs;
 using System.Reflection;
 using System.IO;
+using System.Diagnostics;
 
 namespace Worker
 {
 
     public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string, string>> result, int split);
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
+    public delegate void RADRegisterWorker(int id, string url);
 
     class Worker
     {
@@ -22,33 +24,58 @@ namespace Worker
         String clientURL = String.Empty;
         int myId;
 
+
         static void Main(string[] args)
         {
             Worker w = new Worker();
 
             if (args.Length < 2)
             {
-                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <ENTRY-URL> ");
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> [<ENTRY-URL>] ");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
             }
-   
+            string entryURL;
+            if (args.Length == 2)
+            {
+                entryURL = args[1];
+            }
+            else
+                entryURL = args[2];
+
             w.setId(Int32.Parse(args[0]));
 
-            //TODO: IF ENTRY_URL == JOBTRACKER_URL set jturl ELSE REGISTER WITH ENTRY URL
+            //TODO: IF SERVICE-URL == ENTRY-URL create worker 
+            if (args[1].Equals(entryURL, StringComparison.OrdinalIgnoreCase))
+            {
+                string jtURL = "";
+                string[] split = entryURL.Split('/');
+                split[split.Length] = "JT";
+                foreach (string s in split)
+                {
+                    jtURL += s;
+                }
 
+                w.SetJobTrackerURL(jtURL);
+                Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe", jtURL);
+            }
+
+            //REGISTER WITH WORKER, WHICH FORWARDS TO JT
+            IWorker entryWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
+            RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
+            remoteDel.BeginInvoke(Int32.Parse(args[0]), args[1], null, null);
 
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
+
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
             //Activation
             WorkerServices workerServices = new WorkerServices(w);
             RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
-
 
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + "...");
             System.Console.ReadLine();
@@ -92,6 +119,13 @@ namespace Worker
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADSubmitJobToTracker remoteDel = new RADSubmitJobToTracker(jobTracker.SubmitJob);
             remoteDel.BeginInvoke(fileSize, splits, className, code, clientURL, null, null);
+        }
+
+        public void RegisterWorker(int id, string url)
+        {
+            IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+            RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
+            remoteDel.BeginInvoke(id, url, null, null);
         }
     }
 
@@ -175,6 +209,11 @@ namespace Worker
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
             worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
+        }
+
+        public void RegisterWorker(int id, string url)
+        {
+
         }
     }
 }
