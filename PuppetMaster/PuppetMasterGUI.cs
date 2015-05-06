@@ -26,7 +26,7 @@ namespace PuppetMaster
     {
         private String command;
         private String jobTrackerUrl = String.Empty; //serviceurl ou entryurl
-        //TODO: botao define port
+        //default value for the PM port
         private int port = 20001;
         TcpChannel chan;
         PuppetMasterServices appServices;
@@ -52,15 +52,15 @@ namespace PuppetMaster
             tb_Output.AppendText(text + Environment.NewLine);
         }
         private void processCommand(String submText)
-        { //TODO: adicionar regra para ignorar linha quando começa por %
+        { 
             String[] split = submText.Split(null);
             command = split[0];
-            // tb_Output.AppendText("Command: "+ command +"\r\n");
-            if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
+            if (command.Equals("%", StringComparison.InvariantCultureIgnoreCase))
+                tb_Output.AppendText("Ignoring line..."+Environment.NewLine);
+            else if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length == 7)
                 {
-                    //tb_Output.AppendText(split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
                     Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], File.ReadAllBytes(split[6]));
                 }
 
@@ -109,7 +109,7 @@ namespace PuppetMaster
             }
             else
             {
-                tb_Output.AppendText("Invalid command\r\n");
+                tb_Output.AppendText("Invalid command" + Environment.NewLine);
                 return;
             }
         }
@@ -133,13 +133,15 @@ namespace PuppetMaster
             jobTrackerUrl = entryUrl;
             dbg("End Worker Remote Call.. ");
         }
-
+        
+        //We aren't using this since we don't want to return anything. But it works as a reminder/example of how to
         public void CallBack(IAsyncResult ar)
         {
             RemoteAsyncDelegateNewWorker rad = (RemoteAsyncDelegateNewWorker)((AsyncResult)ar).AsyncDelegate;
             String s = (String)rad.EndInvoke(ar);
             this.Invoke(new FormWriteToOutput(this.dbg), new object[] { s });
             //dbg(s); DOESNT WORK!!! INVOKE NEEDED LIKE ABOVE
+
         }
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
@@ -160,29 +162,45 @@ namespace PuppetMaster
                 System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
                 while ((line = file.ReadLine()) != null)
                 {
-                    tb_Output.AppendText("Script line being processed: " + line + "\r\n");
+                    tb_Output.AppendText("Script line being processed: " + line + Environment.NewLine);
                     processCommand(line);
                 }
             }
             else
-                tb_Output.AppendText("Please enter a command\r\n");
+                tb_Output.AppendText("Please enter a command"+Environment.NewLine);
         }
 
         private void bt_submit_Click(object sender, EventArgs e)
         {
-            //Process.Start("C:\\");
-            //Process.Start(@"Z:\Documents\Visual Studio 2012\Projects\PADIMapNoReduce\JobTracker\bin\Debug\JobTracker.exe");
-            //Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe");
+            //String submittedText = "WORKER 1 tcp://localhost:20001/PM tcp://localhost:30001/W";
+            String submittedText;
 
-            String submittedText = "WORKER 1 tcp://localhost:20001/PM tcp://localhost:30001/W";
             if (!string.IsNullOrWhiteSpace(tb_Submit.Text))
             {
-
-                //submittedText = tb_Submit.Text;
+                submittedText = tb_Submit.Text;
                 processCommand(submittedText);
             }
             else
-                tb_Output.AppendText("Please enter a command\r\n");
+                tb_Output.AppendText("Please enter a command"+Environment.NewLine);
+        }
+
+        private void bt_pmPort_Click(object sender, EventArgs e)
+        {
+            int req_port;
+            if (!string.IsNullOrWhiteSpace(tb_pmPort.Text))
+            {
+                req_port = Int32.Parse(tb_pmPort.Text);
+                if (req_port < 30000 && req_port > 20000)
+                {
+                    dbg("Port before click: " + port);
+                    port = req_port;
+                    dbg("Port after click: " + port);
+                }
+                else
+                    tb_Output.AppendText("Requested Port out of range! Must be between 20001 and 29999" + Environment.NewLine);
+            }
+            else
+                tb_Output.AppendText("Default PuppetMaster port 20001 being used" + Environment.NewLine);                   
         }
 
     }
@@ -206,10 +224,7 @@ namespace PuppetMaster
             //form.Invoke(del, new object[] { "Received ID: " + id + " ServiceURL: " + serviceUrl + " EntryURL: " + entryUrl });
             form.Invoke(new DelWorker(form.startWorkerProc), new Object[] {id, serviceUrl, entryUrl});
 
-
             return "Sucessfully launched a new Worker";
-
-
         }
     }
 }

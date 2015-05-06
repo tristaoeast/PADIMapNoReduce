@@ -35,6 +35,9 @@
             this.lbl_loadScript = new System.Windows.Forms.Label();
             this.tb_loadScript = new System.Windows.Forms.TextBox();
             this.bt_loadScript = new System.Windows.Forms.Button();
+            this.lb_pmPort = new System.Windows.Forms.Label();
+            this.tb_pmPort = new System.Windows.Forms.TextBox();
+            this.bt_pmPort = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tb_Submit
@@ -66,7 +69,7 @@
             // 
             // tb_Output
             // 
-            this.tb_Output.Location = new System.Drawing.Point(109, 73);
+            this.tb_Output.Location = new System.Drawing.Point(109, 102);
             this.tb_Output.Multiline = true;
             this.tb_Output.Name = "tb_Output";
             this.tb_Output.Size = new System.Drawing.Size(691, 195);
@@ -99,11 +102,41 @@
             this.bt_loadScript.UseVisualStyleBackColor = true;
             this.bt_loadScript.Click += new System.EventHandler(this.bt_loadScript_Click);
             // 
+            // lb_pmPort
+            // 
+            this.lb_pmPort.AutoSize = true;
+            this.lb_pmPort.Location = new System.Drawing.Point(7, 74);
+            this.lb_pmPort.Name = "lb_pmPort";
+            this.lb_pmPort.Size = new System.Drawing.Size(95, 13);
+            this.lb_pmPort.TabIndex = 7;
+            this.lb_pmPort.Text = "PuppetMaster Port";
+            this.lb_pmPort.UseMnemonic = false;
+            // 
+            // tb_pmPort
+            // 
+            this.tb_pmPort.Location = new System.Drawing.Point(109, 71);
+            this.tb_pmPort.Name = "tb_pmPort";
+            this.tb_pmPort.Size = new System.Drawing.Size(105, 20);
+            this.tb_pmPort.TabIndex = 8;
+            // 
+            // bt_pmPort
+            // 
+            this.bt_pmPort.Location = new System.Drawing.Point(230, 69);
+            this.bt_pmPort.Name = "bt_pmPort";
+            this.bt_pmPort.Size = new System.Drawing.Size(75, 23);
+            this.bt_pmPort.TabIndex = 9;
+            this.bt_pmPort.Text = "Define";
+            this.bt_pmPort.UseVisualStyleBackColor = true;
+            this.bt_pmPort.Click += new System.EventHandler(this.bt_pmPort_Click);
+            // 
             // PuppetMasterGUI
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(911, 304);
+            this.Controls.Add(this.bt_pmPort);
+            this.Controls.Add(this.tb_pmPort);
+            this.Controls.Add(this.lb_pmPort);
             this.Controls.Add(this.bt_loadScript);
             this.Controls.Add(this.tb_loadScript);
             this.Controls.Add(this.lbl_loadScript);
@@ -127,6 +160,9 @@
         private System.Windows.Forms.Label lbl_loadScript;
         private System.Windows.Forms.TextBox tb_loadScript;
         private System.Windows.Forms.Button bt_loadScript;
+        private System.Windows.Forms.Label lb_pmPort;
+        private System.Windows.Forms.TextBox tb_pmPort;
+        private System.Windows.Forms.Button bt_pmPort;
     }
 }
 
