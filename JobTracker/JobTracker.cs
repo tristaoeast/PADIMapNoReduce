@@ -44,7 +44,7 @@ namespace JobTracker
             return splitsRange;
         }
 
-        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code) 
+        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL) 
         {
             decimal sizeSplit = fileSize / splits;
             finalSizeSplit = (int)System.Math.Round(sizeSplit);
@@ -56,7 +56,7 @@ namespace JobTracker
             for (int i = 0; i < nWorkers; i++)
             {
                 //enviar 1 split a cada worker
-                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, "URL_CLIENT", i);
+                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, i);
                 sentSplits++;
                 sentBytes += finalSizeSplit + 1;
             }
@@ -68,7 +68,7 @@ namespace JobTracker
 
             AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
-            remoteDel.BeginInvoke(start, end, split, "CLIENT URL ENVIAR", null, null);
+            remoteDel.BeginInvoke(start, end, split, clientURL, null, null);
         }
 
         private void CallBack(IAsyncResult ar)
@@ -158,9 +158,9 @@ namespace JobTracker
             return jobTracker.GetSplitRange();
         }
 
-        void SubmitJob(long fileSize, int splits, String className, byte[] code)
+        void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            jobTracker.NewSubmitJob(fileSize, splits, className, code);
+            jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
     }
 
