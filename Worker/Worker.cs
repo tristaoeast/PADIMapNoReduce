@@ -19,6 +19,7 @@ namespace Worker
     {
         String jobTrackerURL = String.Empty;
         String clientURL = String.Empty;
+        int myId;
 
         static void Main(string[] args)
         {
@@ -37,16 +38,12 @@ namespace Worker
                 w.SetJobTrackerURL(args[2]);
             }
 
-            for (int i = 0; i < args.Length; i++)
-            {
-                Console.WriteLine("arg[" + i + "] == " + args[i]);
-            }
+            w.setId(Int32.Parse(args[0]));
 
             //TODO: get port from service url
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
-
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
@@ -59,7 +56,17 @@ namespace Worker
             System.Console.ReadLine();
         }
 
-        void SetJobTrackerURL(string url)
+        public void setId(int id)
+        {
+            myId = id;
+        }
+
+        public int getId()
+        {
+            return myId;
+        }
+
+        public void SetJobTrackerURL(string url)
         {
             jobTrackerURL = url;
         }
@@ -156,6 +163,7 @@ namespace Worker
                 }
             }
             worker.sendResultToClient(result, split, clientURL);
+            return worker.getId();
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
