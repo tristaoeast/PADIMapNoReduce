@@ -19,7 +19,7 @@ namespace JobTracker
         int nSplits = 0;
         long finalSizeSplit = 0;
 
-        public delegate void RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
+        public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
 
         static void Main(string[] args)
         {
@@ -145,7 +145,7 @@ namespace JobTracker
 
         void SubmitJob(long fileSize, int splits, String className, byte[] code)
         {
-            jobTracker.SubmitJobToWorker(fileSize, splits, className, code);
+            jobTracker.NewSubmitJob(fileSize, splits, className, code);
         }
     }
 
