@@ -181,14 +181,8 @@ namespace Client
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-<<<<<<< HEAD
             newWorker.SubmitJobToTracker(fileSize, splits, className, code, cli.getClientURL());
 
-=======
-
-            newWorker.SubmitJobToTracker(fileSize, splits, className, code, "METER_URL_BEM_DO_CLIENTE");
-
->>>>>>> 308da1ead63fddeb037964e9fa4ce77b80598b9f
         }
 
         public byte[] GetSplit(long start, long end)

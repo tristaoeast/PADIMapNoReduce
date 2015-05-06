@@ -18,13 +18,27 @@ namespace JobTracker
         long fileSize = 0;
         int nSplits = 0;
         long finalSizeSplit = 0;
+        IDictionary<int, string> workersRegistry = new Dictionary<int, string>();
+        String clientURL;
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
         public delegate void DelegateWorkToWorker(int id);
 
         static void Main(string[] args)
         {
-            TcpChannel channel = new TcpChannel(40000);
+
+            if (args.Length < 1)
+            {
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: JOBTRACKER <JOBTRACKER-URL> ");
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
+
+            string[] split1 = args[0].Split(':');
+            string[] split2 = split1[2].Split('/');
+            int port = Int32.Parse(split2[0]);
+            TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
             JobTracker jt = new JobTracker();
@@ -44,27 +58,36 @@ namespace JobTracker
             return splitsRange;
         }
 
-        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL) 
+        public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
             decimal sizeSplit = fileSize / splits;
             finalSizeSplit = (int)System.Math.Round(sizeSplit);
-            //ver o número de workers disponíveis e para cara enviar o um split
-            //ex
-            int nWorkers = 2;
+            this.clientURL = clientURL;
 
-            //TALVEZ VERIFICAR ANTES SE EXISTEM MENOS WORKER QUE SPLITS!!
-            for (int i = 0; i < nWorkers; i++)
+            foreach (KeyValuePair<int, string> kvp in workersRegistry)
             {
-                //enviar 1 split a cada worker
-                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, i);
+                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
                 sentSplits++;
                 sentBytes += finalSizeSplit + 1;
             }
+
+            //ver o número de workers disponíveis e para cara enviar o um split
+            //ex
+            //int nWorkers = 2;
+
+            ////TALVEZ VERIFICAR ANTES SE EXISTEM MENOS WORKER QUE SPLITS!!
+            //for (int i = 0; i < nWorkers; i++)
+            //{
+            //    //enviar 1 split a cada worker
+            //    SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, i);
+            //    sentSplits++;
+            //    sentBytes += finalSizeSplit + 1;
+            //}
         }
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
         {
             //conforme o id ir ver qual o URL desse worker e meter aqui em baixo!!!!!
-            IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), "METER_URL_BEM");
+            IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), workersRegistry[idWorker]);
 
             AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
@@ -94,21 +117,26 @@ namespace JobTracker
                 {
                     //long newEnd = (fileSize - sentBytes) + sentBytes;
                     //os bytes foram todos enviados! logo
-                    SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, "CLIENT URL", id);
+                    SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, this.clientURL, id);
                     sentBytes = fileSize;
                     sentSplits++;
-                    
+
                 }
                 else
                 {
-                    SubmitJobToWorker(sentBytes, end, sentSplits + 1, "CLIENT URL", id);
+                    SubmitJobToWorker(sentBytes, end, sentSplits + 1, this.clientURL, id);
                     sentBytes += finalSizeSplit + 1;
                     sentSplits++;
                 }
             }
         }
 
-        public long getSentBytes() 
+        public void RegisterWorker(int id, string url)
+        {
+            workersRegistry.Add(id, url);
+        }
+
+        public long getSentBytes()
         {
             return sentBytes;
         }
@@ -123,7 +151,7 @@ namespace JobTracker
             return fileSize;
         }
 
-        public int getSentSplits() 
+        public int getSentSplits()
         {
             return sentSplits;
         }
@@ -133,12 +161,12 @@ namespace JobTracker
             sentSplits = newSentSplits;
         }
 
-        public int getNSplits() 
+        public int getNSplits()
         {
             return nSplits;
         }
 
-        public void setNSplits(int setNSplits) 
+        public void setNSplits(int setNSplits)
         {
             nSplits = setNSplits;
         }
@@ -162,20 +190,10 @@ namespace JobTracker
         {
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
+
+        void RegisterWorker(int id, string url)
+        {
+            jobTracker.RegisterWorker(id, url);
+        }
     }
-
-    //public class JobTrackerServicesToClient : MarshalByRefObject, IJobTrackerC
-    //{
-    //    public static JobTracker jobTracker;
-
-    //    public JobTrackerServicesToClient(JobTracker jt)
-    //    {
-    //        jobTracker = jt;
-    //    }
-
-    //    void submitJob(long fileSize, int splits)
-    //    {
-    //        //implement
-    //    }
-    //}
 }
