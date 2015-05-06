@@ -109,7 +109,7 @@ namespace PuppetMaster
             }
             else
             {
-                //tb_Output.AppendText("Invalid command\r\n");
+                tb_Output.AppendText("Invalid command\r\n");
                 return;
             }
         }
@@ -125,12 +125,11 @@ namespace PuppetMaster
             dbg("Start Worker Remote Call... " + puppetMasterUrl);
             IPuppetMaster puppetW = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppetMasterUrl);
 
-            AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
+            //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             RemoteAsyncDelegateNewWorker remoteDel = new RemoteAsyncDelegateNewWorker(puppetW.Worker);
-            IAsyncResult ar = remoteDel.BeginInvoke(id, serviceUrl, entryUrl,
-                                                        asyncCallback, null);
+            remoteDel.BeginInvoke(id, serviceUrl, entryUrl, null, null);
+            //remoteDel.BeginInvoke(id, serviceUrl, entryUrl, asyncCallback, null);
 
-            //puppetW.Worker(id, serviceUrl, entryUrl);
             jobTrackerUrl = entryUrl;
             dbg("End Worker Remote Call.. ");
         }
@@ -140,6 +139,7 @@ namespace PuppetMaster
             RemoteAsyncDelegateNewWorker rad = (RemoteAsyncDelegateNewWorker)((AsyncResult)ar).AsyncDelegate;
             String s = (String)rad.EndInvoke(ar);
             this.Invoke(new FormWriteToOutput(this.dbg), new object[] { s });
+            //dbg(s); DOESNT WORK!!! INVOKE NEEDED LIKE ABOVE
         }
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
