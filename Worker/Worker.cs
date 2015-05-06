@@ -28,7 +28,7 @@ namespace Worker
 
             if (args.Length < 2)
             {
-                Console.WriteLine("Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <ENTRY-URL> ");
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> <ENTRY-URL> ");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;

@@ -26,6 +26,15 @@ namespace Client
             ChannelServices.RegisterChannel(chan, true);
 
             Client cli = new Client();
+
+            if(args.Length < 1) {
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: CLIENT <CLIENT-URL>");
+                Console.WriteLine("Press any key to exit.");
+                Console.ReadLine();
+                return;
+            }
+
+            cli.setClientURL(args[0]);
             //Activation
             ClientServices clientServices = new ClientServices(cli);
             RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
@@ -39,6 +48,16 @@ namespace Client
         {
             inputFile = inputDir;
             outputFile = outputDir;
+        }
+
+        public void setClientURL(string url)
+        {
+            clientURL = url;
+        }
+
+        public string getClientURL()
+        {
+            return clientURL;
         }
 
         public String GetOutputDir()
@@ -162,8 +181,7 @@ namespace Client
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-
-            newWorker.SubmitJobToTracker(fileSize, splits, className, code, "METER_URL_BEM_DO_CLIENTE");
+            newWorker.SubmitJobToTracker(fileSize, splits, className, code, cli.getClientURL());
 
         }
 
