@@ -46,8 +46,7 @@ namespace JobTracker
             }
             else
             {
-                long sentBytes = jobTracker.getSentBytes();
-                if (sentBytes > jobTracker.getFileSize())
+                if (sentBytes > fileSize)
                 {
 
                 }

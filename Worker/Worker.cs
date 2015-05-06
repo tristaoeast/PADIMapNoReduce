@@ -12,10 +12,14 @@ using System.IO;
 
 namespace Worker
 {
+
+    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string,string>> result, int split);
+
     class Worker
     {
         String jobTrackerURL = String.Empty;
         String clientURL = String.Empty;
+        int myId;
 
         static void Main(string[] args)
         {
@@ -34,16 +38,12 @@ namespace Worker
                 w.SetJobTrackerURL(args[2]);
             }
 
-            for (int i = 0; i < args.Length; i++)
-            {
-                Console.WriteLine("arg[" + i + "] == " + args[i]);
-            }
+            w.setId(Int32.Parse(args[0]));
 
             //TODO: get port from service url
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
-
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, true);
 
@@ -56,7 +56,17 @@ namespace Worker
             System.Console.ReadLine();
         }
 
-        void SetJobTrackerURL(string url)
+        public void setId(int id)
+        {
+            myId = id;
+        }
+
+        public int getId()
+        {
+            return myId;
+        }
+
+        public void SetJobTrackerURL(string url)
         {
             jobTrackerURL = url;
         }
@@ -64,6 +74,18 @@ namespace Worker
         public string GetJobTrackerURL()
         {
             return jobTrackerURL;
+        }
+
+        public void SetClientURL(string url)
+        {
+            clientURL = url;
+        }
+
+        public void sendResultToClient(IList<KeyValuePair<string,string>> result, int split, string url) {
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
+            //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
+            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
+            remoteDel.BeginInvoke(result, split, null, null);
         }
     }
 
@@ -99,37 +121,49 @@ namespace Worker
             throw (new System.Exception("could not invoke method"));
         }
 
-        public void SubmitJobToWorker(long start, long end, int split, string clientURL)
+        public int SubmitJobToWorker(long start, long end, int split, string clientURL)
         {
+            worker.SetClientURL(clientURL);
+
+            IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String,String>>();
+
             // Client URL must be something like "tcp://localhost:10001/C"
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             byte[] fileSplitByte = client.GetSplit(start, end);
-            while (mapObject == null) ;
+            String filePath = split.ToString() + ".in";
+            File.WriteAllBytes(filePath, fileSplitByte);
 
             // Converts byte[] into a string of the split
-            String fileSplit = Encoding.UTF8.GetString(fileSplitByte);
+            //String fileSplit = Encoding.UTF8.GetString(fileSplitByte);
 
             // Read each line from the string
-            using (StringReader reader = new StringReader(fileSplit))
+            System.IO.StreamReader file = new System.IO.StreamReader(filePath);
+            string line;
+            while (mapObject == null)
             {
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                Console.WriteLine("Waiting for map Object...");
+            }
+            while ((line = file.ReadLine()) != null)
+            {
+                // Dynamically Invoke the method
+                object[] args = new object[] { line };
+                object resultObject = mapType.InvokeMember("Map",
+                  BindingFlags.Default | BindingFlags.InvokeMethod,
+                       null,
+                       mapObject,
+                       args);
+                foreach (KeyValuePair<string, string> kvp in (IList<KeyValuePair<string, string>>)resultObject)
                 {
-                    // Dynamically Invoke the method
-                    object[] args = new object[] { line };
-                    object resultObject = mapType.InvokeMember("Map",
-                      BindingFlags.Default | BindingFlags.InvokeMethod,
-                           null,
-                           mapObject,
-                           args);
-                    IList<KeyValuePair<string, string>> result = (IList<KeyValuePair<string, string>>)resultObject;
-                    Console.WriteLine("Map call result was: ");
-                    foreach (KeyValuePair<string, string> p in result)
-                    {
-                        Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
-                    }
+                    result.Add(kvp);
+                }
+                Console.WriteLine("Map call result for line: " + line + "  was: ");
+                foreach (KeyValuePair<string, string> p in result)
+                {
+                    Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
                 }
             }
+            worker.sendResultToClient(result, split, clientURL);
+            return worker.getId();
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
