@@ -36,6 +36,18 @@ namespace Worker
                 Console.ReadLine();
                 return;
             }
+
+            string[] split1 = args[1].Split(':');
+            string[] split2 = split1[2].Split('/');
+            int port = Int32.Parse(split2[0]);
+
+            TcpChannel channel = new TcpChannel(port);
+            ChannelServices.RegisterChannel(channel, true);
+
+            //Activation
+            WorkerServices workerServices = new WorkerServices(w);
+            RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
+
             string entryURL;
             if (args.Length == 2)
             {
@@ -51,11 +63,12 @@ namespace Worker
             {
                 string jtURL = "";
                 string[] split = entryURL.Split('/');
-                split[split.Length] = "JT";
+                split[split.Length - 1] = "JT";
                 foreach (string s in split)
                 {
-                    jtURL += s;
+                    jtURL += s + '/';
                 }
+                jtURL = jtURL.Remove(jtURL.Length - 1);
 
                 w.SetJobTrackerURL(jtURL);
                 Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe", jtURL);
@@ -65,17 +78,6 @@ namespace Worker
             IWorker entryWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
             remoteDel.BeginInvoke(Int32.Parse(args[0]), args[1], null, null);
-
-            string[] split1 = args[1].Split(':');
-            string[] split2 = split1[2].Split('/');
-            int port = Int32.Parse(split2[0]);
-
-            TcpChannel channel = new TcpChannel(port);
-            ChannelServices.RegisterChannel(channel, true);
-
-            //Activation
-            WorkerServices workerServices = new WorkerServices(w);
-            RemotingServices.Marshal(workerServices, "W", typeof(WorkerServices));
 
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + "...");
             System.Console.ReadLine();

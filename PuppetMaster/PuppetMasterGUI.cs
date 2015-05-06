@@ -60,8 +60,10 @@ namespace PuppetMaster
                 tb_Output.AppendText("Ignoring line..."+Environment.NewLine);
             else if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
+                tb_Output.AppendText(Environment.CurrentDirectory + Environment.NewLine);
                 if (split.Length == 7)
                 {
+                    tb_Output.AppendText("Command length: " + split.Length + Environment.NewLine);
                     Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], File.ReadAllBytes(split[6]));
                 }
 
@@ -118,6 +120,7 @@ namespace PuppetMaster
 
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
+            //TODO: arrancar processo da app antes desta cangalhada toda
             IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:40001/U");
             app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
         }

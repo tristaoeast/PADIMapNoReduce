@@ -42,9 +42,9 @@ namespace UserApplication
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
-        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, IMap mapObject)
+        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
         {
-            client.Submit(inputFile, splits, outputDirectory, mapObject);
+            client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
             tb_UserApp_debug.AppendText("Job submitted to client\r\n");
         }
 
@@ -70,16 +70,16 @@ namespace UserApplication
     }
 
     delegate void DelInit(String entryUrl);
-    delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, IMap mapObject);
+    delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, byte[] code);
 
     public class UserAppServices : MarshalByRefObject, IApp
     {
         public static UserAppGUI form;
 
-        public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, IMap mapObject)
+        public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
-            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, mapObject });
+            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code});
         }
     }
 

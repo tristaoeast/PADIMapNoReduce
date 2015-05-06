@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace JobTracker
 {
-    class JobTracker
+    public class JobTracker
     {
         long sentBytes = 0;
         int sentSplits = 0;
@@ -35,11 +35,13 @@ namespace JobTracker
                 return;
             }
 
+            Console.WriteLine("JOBTRACKER-URL: " + args[0]);
+
             string[] split1 = args[0].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
-            TcpChannel channel = new TcpChannel(port);
-            ChannelServices.RegisterChannel(channel, true);
+            //TcpChannel channel = new TcpChannel(port);
+            //ChannelServices.RegisterChannel(channel, true);
 
             JobTracker jt = new JobTracker();
             //Activation
@@ -181,17 +183,17 @@ namespace JobTracker
             jobTracker = jt;
         }
 
-        IList<int> GetSplitRange()
+        public IList<int> GetSplitRange()
         {
             return jobTracker.GetSplitRange();
         }
 
-        void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
+        public void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
 
-        void RegisterWorker(int id, string url)
+        public void RegisterWorker(int id, string url)
         {
             jobTracker.RegisterWorker(id, url);
         }
