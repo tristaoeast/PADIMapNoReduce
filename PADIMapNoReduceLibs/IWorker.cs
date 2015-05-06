@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿﻿﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,6 @@ namespace PADIMapNoReduceLibs
     {
         int SubmitJobToWorker(long start, long end, int split, String clientURL);
         bool SendMapper(String className, byte[] code);
-        void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
+        int SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     }
 }

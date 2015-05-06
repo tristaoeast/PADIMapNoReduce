@@ -155,14 +155,16 @@ namespace Client
             Console.WriteLine("New Job submitted to JobTracker at" + urlJobTracker);
 
             client.SaveDirs(inputFile, outputDirectory);
-            IWorker newJobTracker = (IWorker)Activator.GetObject(typeof(IWorker), urlJobTracker);
+            IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), urlJobTracker);
 
             //client.setFileBytes();
 
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
 
-            newJobTracker.SubmitJob(fileSize, splits, className, code, clientURL);
+
+            newWorker.SubmitJobToTracker(fileSize, splits, className, code, "METER_URL_BEM_DO_CLIENTE");
+
         }
 
         public byte[] GetSplit(long start, long end)
