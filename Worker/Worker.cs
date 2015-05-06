@@ -13,7 +13,7 @@ using System.IO;
 namespace Worker
 {
 
-    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string,string>>, int split);
+    public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string,string>> result, int split);
 
     class Worker
     {
