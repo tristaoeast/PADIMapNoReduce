@@ -190,20 +190,10 @@ namespace JobTracker
         {
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
+
+        void RegisterWorker(int id, string url)
+        {
+            jobTracker.RegisterWorker(id, url);
+        }
     }
-
-    //public class JobTrackerServicesToClient : MarshalByRefObject, IJobTrackerC
-    //{
-    //    public static JobTracker jobTracker;
-
-    //    public JobTrackerServicesToClient(JobTracker jt)
-    //    {
-    //        jobTracker = jt;
-    //    }
-
-    //    void submitJob(long fileSize, int splits)
-    //    {
-    //        //implement
-    //    }
-    //}
 }
