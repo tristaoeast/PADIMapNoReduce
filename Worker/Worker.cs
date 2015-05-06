@@ -41,10 +41,7 @@ namespace Worker
 
             //TODO: get port from service url
             string[] split1 = args[1].Split(':');
-            Console.WriteLine("SPLIT1[2]: " + split1[2]);
             string[] split2 = split1[2].Split('/');
-            Console.WriteLine("SPLIT2[0]: " + split2[0]);
-            Console.ReadLine();
             int port = Int32.Parse(split2[0]);
 
             TcpChannel channel = new TcpChannel(port);
