@@ -60,6 +60,12 @@ namespace JobTracker
             return splitsRange;
         }
 
+        public void SendMapper(String className, byte[] code, String workerURL)
+        {
+            IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), workerURL);
+            worker.SendMapper(className, code);
+        }
+
         public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
             decimal sizeSplit = fileSize / splits;
@@ -68,6 +74,7 @@ namespace JobTracker
 
             foreach (KeyValuePair<int, string> kvp in workersRegistry)
             {
+                SendMapper(className, code, kvp.Value);
                 SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
                 sentSplits++;
                 sentBytes += finalSizeSplit + 1;

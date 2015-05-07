@@ -60,11 +60,6 @@ namespace UserApplication
         {
             tb_UserApp_debug.AppendText("Starting client with port: " + clientPort + " userURL: " + userAppURL + " clientURL:" + clientURL + Environment.NewLine);
             Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", clientPort + " " + userAppURL + " " + clientURL);
-            //for (int i = 0; i < 1000000000; i++)
-            //{
-            //    int j = 10000 / 3000;
-            //}
-            //client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             try
             {
                 IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
