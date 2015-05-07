@@ -17,6 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using UserApplication;
 
 namespace PuppetMaster
 {
@@ -123,21 +124,27 @@ namespace PuppetMaster
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
             clientPortCounter++;
+            dbg("BOOOOOOOMMMMMM 11111");
             Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter + "/U" + " " + "tcp://localhost:" + clientPortCounter + "/C");
-            for (int i = 0; i < 1000000; i++)
+
+            dbg("BOOOOOOOMMMMMM 22222");
+            //UserAppGUI uApp = new UserAppGUI();
+            //uApp.createUserApp(clientPortCounter, "tcp://localhost:" + clientPortCounter + "/U", "tcp://localhost:" + clientPortCounter + "/C");
+            //uApp.Show();
+            for (int i = 0; i < 1000000000; i++)
             {
                 int j = 10000 / 3000;
             }
             //TODO: arrancar processo da app antes desta cangalhada toda
-            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter + "/U");
-            try
-            {
-                app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
-            }
-            catch (SocketException e)
-            {
-                tb_Output.AppendText(e.ErrorCode.ToString());
-            }
+            //IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter + "/U");
+            //try
+            //{
+            //    app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
+            //}
+            //catch (SocketException e)
+            //{
+            //    tb_Output.AppendText("Exceeeeeption: "+e.ErrorCode.ToString());
+            //}
         }
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)

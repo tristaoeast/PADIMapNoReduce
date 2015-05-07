@@ -87,6 +87,10 @@
       <Project>{456d2f1a-8921-4d0e-9a79-09825287ce24}</Project>
       <Name>PADIMapNoReduceLibs</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UserApplication\UserApplication.csproj">
+      <Project>{e10eedb2-8168-41b1-8c6b-717b81b66396}</Project>
+      <Name>UserApplication</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

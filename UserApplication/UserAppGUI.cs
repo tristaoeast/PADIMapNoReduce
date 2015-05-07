@@ -33,7 +33,7 @@ namespace UserApplication
 
             if (args.Length < 3)
             {
-                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
+               Console.WriteLine("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
@@ -42,6 +42,8 @@ namespace UserApplication
             clientURL = args[2];
             userAppURL = args[1];
             port = Int32.Parse(args[0]);
+
+
 
             TcpChannel chan = new TcpChannel(port);
             ChannelServices.RegisterChannel(chan, false);
@@ -64,6 +66,20 @@ namespace UserApplication
         {
             client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
             tb_UserApp_debug.AppendText("Job submitted to client\r\n");
+        }
+
+        public void createUserApp(int clientPort, String userURL, String cliURL)
+        {
+            clientURL = cliURL;
+            userAppURL = userURL;
+            port = clientPort;
+
+            TcpChannel chan = new TcpChannel(port);
+            ChannelServices.RegisterChannel(chan, false);
+
+            //Activation
+            UserAppServices appServices = new UserAppServices();
+            RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
         }
 
         private void bt_init_Click(object sender, EventArgs e)
