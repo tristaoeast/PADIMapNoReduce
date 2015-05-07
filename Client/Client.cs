@@ -26,6 +26,7 @@ namespace Client
             //ChannelServices.RegisterChannel(chan, true);
 
             Client cli = new Client();
+            cli.setClientURL(args[2]);
             //Activation
             ClientServices clientServices = new ClientServices(cli);
             RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
@@ -37,8 +38,6 @@ namespace Client
                 Console.ReadLine();
                 return;
             }
-
-            cli.setClientURL(args[2]);
             
             Console.WriteLine("Client started. Press any key to exit...");
             Console.ReadLine();

@@ -59,63 +59,68 @@ namespace PuppetMaster
             String[] split = submText.Split(null);
             command = split[0];
             if (command.Equals("%", StringComparison.InvariantCultureIgnoreCase))
-                tb_Output.AppendText("Ignoring line..." + Environment.NewLine);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Ignoring line..."});
+                //dbg("Ignoring line..." + Environment.NewLine);
             else if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
-                tb_Output.AppendText(Environment.CurrentDirectory + Environment.NewLine);
                 if (split.Length == 7)
                 {
-                    tb_Output.AppendText("Command length: " + split.Length + Environment.NewLine);
                     Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], File.ReadAllBytes(split[6]));
                 }
 
                 else
-                    tb_Output.AppendText("Wrong number of args. Submit command must have 6 arguments");
+                {
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: Submit command must have 6 arguments" });
+                    //dbg("Wrong number of args. Submit command must have 6 arguments");
+                }
             }
             else if (command.Equals("Worker", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length < 4)
                 {
-                    tb_Output.AppendText("Wrong number of args. Worker command must have at least 3 arguments");
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: WORKER command must have at least 3 arguments" });
+                    //dbg("Wrong number of args. Worker command must have at least 3 arguments");
                 }
                 else
                 {
-                    //   tb_Output.AppendText(split[1] + " " + split[2] + " " + split[3] + " " + split[split.Length - 1]);
+                    //   dbg(split[1] + " " + split[2] + " " + split[3] + " " + split[split.Length - 1]);
                     Worker(split[1], split[2], split[3], split[split.Length - 1]);
                 }
             }
             else if (command.Equals("Wait", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
-                //Wait(Int32.Parse(split[1]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Waiting " + split[1] + " seconds." });
+                Wait(Int32.Parse(split[1]));
             }
             else if (command.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("SlowW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);0
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);0
             }
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("FreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else if (command.Equals("UnfreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
-                //tb_Output.AppendText("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
             }
             else
             {
-                tb_Output.AppendText("Invalid command" + Environment.NewLine);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: Invalid command" });
+                //dbg("Invalid command" + Environment.NewLine);
                 return;
             }
         }
@@ -123,9 +128,8 @@ namespace PuppetMaster
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
             clientPortCounter++;
-            tb_Output.AppendText(clientPortCounter.ToString());
+            //dbg(clientPortCounter.ToString());
             Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/U" + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/C");
-
 
             for (int i = 0; i < 1000000000; i++)
             {
@@ -137,22 +141,25 @@ namespace PuppetMaster
             IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter.ToString() + "/U");
             try
             {
-                tb_Output.AppendText(clientPortCounter.ToString());
+                //dbg(clientPortCounter.ToString());
                 app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
             }
             catch (RemotingException re)
             {
-                tb_Output.AppendText("Remoting Exception: " + re.StackTrace + Environment.NewLine);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "RemotingException: " + re.StackTrace });
+                //dbg("Remoting Exception: " + re.StackTrace + Environment.NewLine);
             }
             catch (SocketException e)
             {
-                tb_Output.AppendText("Exceeeeeption: " + e.ErrorCode.ToString() + Environment.NewLine);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "SocketException: " + e.ErrorCode });
+                //dbg("Exceeeeeption: " + e.ErrorCode.ToString() + Environment.NewLine);
             }
         }
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
         {
-            dbg("Start Worker Remote Call... " + puppetMasterUrl);
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker remote call..." + puppetMasterUrl });
+            //dbg("Start Worker Remote Call... " + puppetMasterUrl);
             IPuppetMaster puppetW = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppetMasterUrl);
 
             //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
@@ -161,7 +168,8 @@ namespace PuppetMaster
             //remoteDel.BeginInvoke(id, serviceUrl, entryUrl, asyncCallback, null);
 
             jobTrackerUrl = entryUrl;
-            dbg("End Worker Remote Call.. ");
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "End Worker remote call..." + puppetMasterUrl});
+            //dbg("End Worker Remote Call.. ");
         }
 
         //We aren't using this since we don't want to return anything. But it works as a reminder/example of how to
@@ -176,15 +184,28 @@ namespace PuppetMaster
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
         {
-            dbg("Start Worker Proc ");
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process" });
+
+            //dbg("Start Worker Proc ");
             Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
         public void Wait(int secs)
         {
-            int interval = secs * 1000; //the call is in milliseconds
-            //TODO: put the command processing stuff to sleep for x secs
-            //someThread.sleep(secs);
+            int interval = secs * 1000;
+            Thread.Sleep(interval);
+        }
+
+        public void loadScript(string scriptPath)
+        {
+            String line;
+
+            System.IO.StreamReader file = new System.IO.StreamReader(scriptPath);
+            while ((line = file.ReadLine()) != null)
+            {
+                //dbg("Script line being processed: " + line + Environment.NewLine);
+                processCommand(line);
+            }
         }
 
         private void bt_loadScript_Click(object sender, EventArgs e)
@@ -194,17 +215,13 @@ namespace PuppetMaster
             if (!string.IsNullOrWhiteSpace(tb_loadScript.Text))
             {
                 pathToScript = tb_loadScript.Text;
-                String line;
 
-                System.IO.StreamReader file = new System.IO.StreamReader(pathToScript);
-                while ((line = file.ReadLine()) != null)
-                {
-                    tb_Output.AppendText("Script line being processed: " + line + Environment.NewLine);
-                    processCommand(line);
-                }
+                Thread loaderThread = new Thread(() => loadScript(pathToScript));
+                loaderThread.Start();
+
             }
             else
-                tb_Output.AppendText("Please enter a command" + Environment.NewLine);
+                dbg("Please enter a command" + Environment.NewLine);
         }
 
         private void bt_submit_Click(object sender, EventArgs e)
@@ -218,7 +235,7 @@ namespace PuppetMaster
                 processCommand(submittedText);
             }
             else
-                tb_Output.AppendText("Please enter a command" + Environment.NewLine);
+                dbg("Please enter a command" + Environment.NewLine);
         }
 
         private void bt_pmPort_Click(object sender, EventArgs e)
@@ -234,10 +251,10 @@ namespace PuppetMaster
                     dbg("Port after click: " + port);
                 }
                 else
-                    tb_Output.AppendText("Requested Port out of range! Must be between 20001 and 29999" + Environment.NewLine);
+                    dbg("Requested Port out of range! Must be between 20001 and 29999" + Environment.NewLine);
             }
             else
-                tb_Output.AppendText("Default PuppetMaster port 20001 being used" + Environment.NewLine);
+                dbg("Default PuppetMaster port 20001 being used" + Environment.NewLine);
         }
 
 
