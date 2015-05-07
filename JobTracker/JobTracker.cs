@@ -62,6 +62,7 @@ namespace JobTracker
 
         public void SendMapper(String className, byte[] code, String workerURL)
         {
+            Console.WriteLine("Sending mapper with name: " + className + " to worker: " + workerURL);
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), workerURL);
             worker.SendMapper(className, code);
         }
@@ -100,6 +101,7 @@ namespace JobTracker
 
             AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
+            Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
             remoteDel.BeginInvoke(start, end, split, clientURL, null, null);
         }
 
@@ -198,12 +200,12 @@ namespace JobTracker
 
         public void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            Console.WriteLine("Submit job");
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
-            Console.WriteLine("ENTREI!!");
             jobTracker.RegisterWorker(id, url);
         }
     }

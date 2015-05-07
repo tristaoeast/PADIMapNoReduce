@@ -143,10 +143,13 @@ namespace Worker
 
         public bool SendMapper(String className, byte[] code)
         {
+            Console.WriteLine("Received SendMapper");
             Assembly assembly = Assembly.Load(code);
+            Console.WriteLine("Received SendMapper2");
             // Walk through each type in the assembly looking for our class
             foreach (Type type in assembly.GetTypes())
             {
+                Console.WriteLine("Type: " + type.FullName);
                 if (type.IsClass == true)
                 {
                     if (type.FullName.EndsWith("." + className))
@@ -154,16 +157,19 @@ namespace Worker
                         mapType = type;
                         // create an instance of the object
                         mapObject = Activator.CreateInstance(type);
+                        Console.WriteLine("MapObject loadded successfully");
                         return true;
 
                     }
                 }
             }
+            Console.WriteLine("Could not invoke method");
             throw (new System.Exception("could not invoke method"));
         }
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
         {
+            Console.WriteLine("Received SubmitJobToWorker");
             worker.SetClientURL(clientURL);
 
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
@@ -209,6 +215,7 @@ namespace Worker
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            Console.WriteLine("Received SubmitJobToTracker");
             worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
         }
 
