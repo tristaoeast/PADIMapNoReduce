@@ -1,2 +1,8 @@
 WORKER 1 tcp://localhost:20001/PM tcp://localhost:30001/W 
-SUBMIT tcp://localhost:30001/W pl2000.txt result 2 CharCountMapper ./LibMapperCharCount.dll
+%
+%
+%
+%
+%
+%
+SUBMIT tcp://localhost:30001/W pl.txt result 2 CharCountMapper ./LibMapperCharCount.dll
