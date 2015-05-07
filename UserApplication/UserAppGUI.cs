@@ -16,71 +16,90 @@ using System.Windows.Forms;
 
 namespace UserApplication
 {
+    public delegate void RADClientInit(string entryURL);
+    public delegate void RADClientSubmit(string inputFile, Int32 splits, string output, string mapName, byte[] code);
+
     public partial class UserAppGUI : Form
     {
         IClient client;
 
-        int port;
+        int userPort;
         String userAppURL;
         String clientURL;
 
         public UserAppGUI()
         {
             InitializeComponent();
-            UserAppServices.form = this;
+            //UserAppServices.form = this;
 
             string[] args = Environment.GetCommandLineArgs();
 
-            if (args.Length < 3)
+            if (args.Length < 4)
             {
-               Console.WriteLine("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
-                Console.WriteLine("Press any key to exit.");
-                Console.ReadLine();
-                return;
+                tb_UserApp_debug.AppendText("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
+                tb_UserApp_debug.AppendText("Please close application");
+
             }
 
-            clientURL = args[2];
-            userAppURL = args[1];
-            port = Int32.Parse(args[0]);
+            clientURL = args[3];
+            userAppURL = args[2];
+            userPort = Int32.Parse(args[1]);
 
-
-
-            TcpChannel chan = new TcpChannel(port);
-            ChannelServices.RegisterChannel(chan, false);
+            tb_UserApp_debug.AppendText(userPort.ToString());
+            TcpChannel chan = new TcpChannel(userPort);
+            ChannelServices.RegisterChannel(chan, true);
 
             //Activation
-            UserAppServices appServices = new UserAppServices();
+            UserAppServices appServices = new UserAppServices(this);
             RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
-
+            tb_UserApp_debug.AppendText("UApp Service Started on port: " + userPort + Environment.NewLine);
         }
 
         public void Init(String entryUrl)
         {
-            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", port + " " + userAppURL + " " + clientURL);
-            client = (IClient)Activator.GetObject(typeof(IClient), "tcp://localhost:10001/C");
-            client.Init(entryUrl);
+            tb_UserApp_debug.AppendText("Starting clietn with port: " + userPort + " userURL: " + userAppURL + " clientURL:" + clientURL + Environment.NewLine);
+            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", userPort + " " + userAppURL + " " + clientURL);
+            tb_UserApp_debug.AppendText("1" + Environment.NewLine);
+            for (int i = 0; i < 1000000000; i++)
+            {
+                int j = 10000 / 3000;
+            }
+            client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+            tb_UserApp_debug.AppendText("2");
+            try
+            {
+                RADClientInit remoteDel = new RADClientInit(client.Init);
+                remoteDel.BeginInvoke(entryUrl, null, null);
+                //client.Init(entryUrl);
+            }
+            catch (RemotingException re)
+            {
+                tb_UserApp_debug.AppendText(re.StackTrace);
+            }
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
         public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
         {
-            client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
+            RADClientSubmit remoteDel = new RADClientSubmit(client.Submit);
+            remoteDel.BeginInvoke(inputFile, splits, outputDirectory, mapClassName, code, null, null);
+            //client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
             tb_UserApp_debug.AppendText("Job submitted to client\r\n");
         }
 
-        public void createUserApp(int clientPort, String userURL, String cliURL)
-        {
-            clientURL = cliURL;
-            userAppURL = userURL;
-            port = clientPort;
+        //public void createUserApp(int clientPort, String userURL, String cliURL)
+        //{
+        //    clientURL = cliURL;
+        //    userAppURL = userURL;
+        //    port = clientPort;
 
-            TcpChannel chan = new TcpChannel(port);
-            ChannelServices.RegisterChannel(chan, false);
+        //    TcpChannel chan = new TcpChannel(port);
+        //    ChannelServices.RegisterChannel(chan, false);
 
-            //Activation
-            UserAppServices appServices = new UserAppServices();
-            RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
-        }
+        //    //Activation
+        //    UserAppServices appServices = new UserAppServices(this);
+        //    RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
+        //}
 
         private void bt_init_Click(object sender, EventArgs e)
         {
@@ -110,10 +129,15 @@ namespace UserApplication
     {
         public static UserAppGUI form;
 
+        public UserAppServices(UserAppGUI f)
+        {
+            form = f;
+        }
+
         public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
-            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code});
+            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code });
         }
     }
 

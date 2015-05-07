@@ -29,6 +29,8 @@ namespace Worker
         {
             Worker w = new Worker();
 
+            Console.WriteLine(args[0]);
+
             if (args.Length < 2)
             {
                 Console.WriteLine("ERROR: Wrong number of arguments. Expected format: WORKER <ID> <SERVICE-URL> [<ENTRY-URL>] ");

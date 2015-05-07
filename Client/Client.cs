@@ -26,6 +26,9 @@ namespace Client
             //ChannelServices.RegisterChannel(chan, true);
 
             Client cli = new Client();
+            //Activation
+            ClientServices clientServices = new ClientServices(cli);
+            RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
 
             if (args.Length < 3)
             {
@@ -36,9 +39,9 @@ namespace Client
             }
 
             cli.setClientURL(args[2]);
-            //Activation
-            ClientServices clientServices = new ClientServices(cli);
-            RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
+            
+            Console.WriteLine("Client started. Press any key to exit...");
+            Console.ReadLine();
         }
 
         public void SetEntryURL(String eURL)
@@ -129,6 +132,7 @@ namespace Client
 
         public void Init(String entryURL)
         {
+            Console.WriteLine("Estou no init");
             urlJobTracker = entryURL;
             client.SetEntryURL(entryURL);
         }

@@ -17,7 +17,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using UserApplication;
 
 namespace PuppetMaster
 {
@@ -124,27 +123,31 @@ namespace PuppetMaster
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
             clientPortCounter++;
-            dbg("BOOOOOOOMMMMMM 11111");
-            Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter + "/U" + " " + "tcp://localhost:" + clientPortCounter + "/C");
+            tb_Output.AppendText(clientPortCounter.ToString());
+            Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/U" + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/C");
 
-            dbg("BOOOOOOOMMMMMM 22222");
-            //UserAppGUI uApp = new UserAppGUI();
-            //uApp.createUserApp(clientPortCounter, "tcp://localhost:" + clientPortCounter + "/U", "tcp://localhost:" + clientPortCounter + "/C");
-            //uApp.Show();
+
             for (int i = 0; i < 1000000000; i++)
             {
                 int j = 10000 / 3000;
             }
             //TODO: arrancar processo da app antes desta cangalhada toda
-            //IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter + "/U");
-            //try
-            //{
-            //    app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
-            //}
-            //catch (SocketException e)
-            //{
-            //    tb_Output.AppendText("Exceeeeeption: "+e.ErrorCode.ToString());
-            //}
+
+
+            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter.ToString() + "/U");
+            try
+            {
+                tb_Output.AppendText(clientPortCounter.ToString());
+                app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
+            }
+            catch (RemotingException re)
+            {
+                tb_Output.AppendText("Remoting Exception: " + re.StackTrace + Environment.NewLine);
+            }
+            catch (SocketException e)
+            {
+                tb_Output.AppendText("Exceeeeeption: " + e.ErrorCode.ToString() + Environment.NewLine);
+            }
         }
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
