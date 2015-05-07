@@ -70,6 +70,11 @@ namespace Client
             return outputFile;
         }
 
+        public void dbg(String s)
+        {
+            Console.WriteLine(s);
+        }
+
         //public void setFileBytes()
         //{
         //    fileBytes = File.ReadAllBytes(inputFile);
@@ -132,15 +137,15 @@ namespace Client
 
         public void Init(String entryURL)
         {
-            Console.WriteLine("Estou no init");
+            client.dbg("PASSEI NO INIT");
             urlJobTracker = entryURL;
             client.SetEntryURL(entryURL);
         }
         public void Submit(String inputFile, int splits, String outputDirectory, String className, byte[] code)
         {
-            while (String.IsNullOrEmpty(urlJobTracker)) ;
+            //while (String.IsNullOrEmpty(urlJobTracker)) ;
 
-            Console.WriteLine("New Job submitted to JobTracker at" + urlJobTracker);
+            client.dbg("New Job submitted to JobTracker at" + urlJobTracker);
 
             client.SaveDirs(inputFile, outputDirectory);
             IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), urlJobTracker);

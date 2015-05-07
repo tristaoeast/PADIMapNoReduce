@@ -59,13 +59,11 @@ namespace UserApplication
         {
             tb_UserApp_debug.AppendText("Starting clietn with port: " + userPort + " userURL: " + userAppURL + " clientURL:" + clientURL + Environment.NewLine);
             Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", userPort + " " + userAppURL + " " + clientURL);
-            tb_UserApp_debug.AppendText("1" + Environment.NewLine);
             for (int i = 0; i < 1000000000; i++)
             {
                 int j = 10000 / 3000;
             }
             client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
-            tb_UserApp_debug.AppendText("2");
             try
             {
                 RADClientInit remoteDel = new RADClientInit(client.Init);
