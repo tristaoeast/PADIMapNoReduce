@@ -10,6 +10,7 @@ using PADIMapNoReduceLibs;
 using System.Reflection;
 using System.IO;
 using System.Diagnostics;
+using System.Net;
 
 namespace Worker
 {
@@ -63,17 +64,10 @@ namespace Worker
             //TODO: IF SERVICE-URL == ENTRY-URL create worker 
             if (args[1].Equals(entryURL, StringComparison.OrdinalIgnoreCase))
             {
-                string jtURL = "";
-                string[] split = entryURL.Split('/');
-                split[split.Length - 1] = "JT";
-                foreach (string s in split)
-                {
-                    jtURL += s + '/';
-                }
-                jtURL = jtURL.Remove(jtURL.Length - 1);
-
+                int jtPort = port + 20000;
+                string jtURL = "tcp://" + Dns.GetHostName() + ":" + jtPort + "/JT";
                 w.SetJobTrackerURL(jtURL);
-                Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe", jtURL);
+                Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe", jtPort + " " + jtURL);
             }
 
             //REGISTER WITH WORKER, WHICH FORWARDS TO JT
@@ -81,7 +75,7 @@ namespace Worker
             RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
             remoteDel.BeginInvoke(Int32.Parse(args[0]), args[1], null, null);
 
-            System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + "...");
+            System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + " and URL: " + args[1] + "...");
             System.Console.ReadLine();
         }
 
@@ -127,11 +121,14 @@ namespace Worker
 
         public void RegisterWorker(int id, string url)
         {
+            Console.WriteLine("Sending RegisterWorker of ID: " + id + " with URL: " + url + " to JobTracker at " + jobTrackerURL);
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
             remoteDel.BeginInvoke(id, url, null, null);
         }
     }
+
+    public delegate void DelRegisterWorker(int id, string url);
 
     class WorkerServices : MarshalByRefObject, IWorker
     {
@@ -217,7 +214,8 @@ namespace Worker
 
         public void RegisterWorker(int id, string url)
         {
-
+            Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
+            worker.RegisterWorker(id, url);
         }
     }
 }

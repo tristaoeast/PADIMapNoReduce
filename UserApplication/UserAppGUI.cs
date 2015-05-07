@@ -21,9 +21,10 @@ namespace UserApplication
 
     public partial class UserAppGUI : Form
     {
-        IClient client;
+        //IClient client;
 
         int userPort;
+        int clientPort;
         String userAppURL;
         String clientURL;
 
@@ -34,41 +35,42 @@ namespace UserApplication
 
             string[] args = Environment.GetCommandLineArgs();
 
-            if (args.Length < 4)
+            if (args.Length < 5)
             {
-                tb_UserApp_debug.AppendText("ERROR: Wrong number of arguments. Expected format: USERAPP <PORT> <USERAPP-URL> <CLIENT-URL>");
+                tb_UserApp_debug.AppendText("ERROR: Wrong number of arguments. Expected format: USERAPP <USER-PORT [400001-49999]> <USERAPP-URL> <CLIENT-PORT> <CLIENT-URL>");
                 tb_UserApp_debug.AppendText("Please close application");
-
+                while (true);
             }
 
-            clientURL = args[3];
+            clientURL = args[4];
             userAppURL = args[2];
             userPort = Int32.Parse(args[1]);
+            clientPort = Int32.Parse(args[3]);
 
-            tb_UserApp_debug.AppendText(userPort.ToString());
             TcpChannel chan = new TcpChannel(userPort);
             ChannelServices.RegisterChannel(chan, true);
 
             //Activation
             UserAppServices appServices = new UserAppServices(this);
             RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
-            tb_UserApp_debug.AppendText("UApp Service Started on port: " + userPort + Environment.NewLine);
+            tb_UserApp_debug.AppendText("UserApp Service Started on port: " + userPort + Environment.NewLine);
         }
 
         public void Init(String entryUrl)
         {
-            tb_UserApp_debug.AppendText("Starting clietn with port: " + userPort + " userURL: " + userAppURL + " clientURL:" + clientURL + Environment.NewLine);
-            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", userPort + " " + userAppURL + " " + clientURL);
-            for (int i = 0; i < 1000000000; i++)
-            {
-                int j = 10000 / 3000;
-            }
-            client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+            tb_UserApp_debug.AppendText("Starting client with port: " + clientPort + " userURL: " + userAppURL + " clientURL:" + clientURL + Environment.NewLine);
+            Process.Start(@"..\..\..\Client\bin\Debug\Client.exe", clientPort + " " + userAppURL + " " + clientURL);
+            //for (int i = 0; i < 1000000000; i++)
+            //{
+            //    int j = 10000 / 3000;
+            //}
+            //client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             try
             {
-                RADClientInit remoteDel = new RADClientInit(client.Init);
-                remoteDel.BeginInvoke(entryUrl, null, null);
-                //client.Init(entryUrl);
+                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+                //RADClientInit remoteDel = new RADClientInit(client.Init);
+                //remoteDel.BeginInvoke(entryUrl, null, null);
+                client.Init(entryUrl);
             }
             catch (RemotingException re)
             {
@@ -77,12 +79,13 @@ namespace UserApplication
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
-        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
+        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code, String entryUrl)
         {
-            RADClientSubmit remoteDel = new RADClientSubmit(client.Submit);
-            remoteDel.BeginInvoke(inputFile, splits, outputDirectory, mapClassName, code, null, null);
-            //client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
-            tb_UserApp_debug.AppendText("Job submitted to client\r\n");
+            IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+            tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
+            tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
+            client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
+            tb_UserApp_debug.AppendText("Job finished\r\n");
         }
 
         //public void createUserApp(int clientPort, String userURL, String cliURL)
@@ -121,7 +124,7 @@ namespace UserApplication
     }
 
     delegate void DelInit(String entryUrl);
-    delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, byte[] code);
+    delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, byte[] code, String entryURL);
 
     public class UserAppServices : MarshalByRefObject, IApp
     {
@@ -135,7 +138,7 @@ namespace UserApplication
         public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
-            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code });
+            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code, entryUrl });
         }
     }
 

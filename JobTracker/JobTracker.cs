@@ -29,19 +29,19 @@ namespace JobTracker
 
             if (args.Length < 1)
             {
-                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: JOBTRACKER <JOBTRACKER-URL> ");
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: JOBTRACKER <JOBTRACKER-PORT [50001-59999]> <JOBTRACKER-URL> ");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
             }
 
-            Console.WriteLine("JOBTRACKER-URL: " + args[0]);
+            Console.WriteLine("JOBTRACKER-URL: " + args[1]);
 
-            string[] split1 = args[0].Split(':');
+            string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
-            //TcpChannel channel = new TcpChannel(port);
-            //ChannelServices.RegisterChannel(channel, true);
+            TcpChannel channel = new TcpChannel(port);
+            ChannelServices.RegisterChannel(channel, true);
 
             JobTracker jt = new JobTracker();
             //Activation
@@ -135,6 +135,7 @@ namespace JobTracker
 
         public void RegisterWorker(int id, string url)
         {
+            Console.WriteLine("Registering worker with ID: " + id + "and URL: " + url);
             workersRegistry.Add(id, url);
         }
 
@@ -195,6 +196,7 @@ namespace JobTracker
 
         public void RegisterWorker(int id, string url)
         {
+            Console.WriteLine("ENTREI!!");
             jobTracker.RegisterWorker(id, url);
         }
     }

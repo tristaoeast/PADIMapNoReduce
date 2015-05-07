@@ -19,25 +19,27 @@ namespace Client
         //byte[] fileBytes;
         String entryUrl;
         String clientURL;
+        String userAppURL;
 
         static void Main(string[] args)
         {
-            //TcpChannel chan = new TcpChannel(10001);
-            //ChannelServices.RegisterChannel(chan, true);
-
-            Client cli = new Client();
-            cli.setClientURL(args[2]);
-            //Activation
-            ClientServices clientServices = new ClientServices(cli);
-            RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
-
             if (args.Length < 3)
             {
-                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: CLIENT <PORT> <USERAPP-URL> <CLIENT-URL>");
+                Console.WriteLine("ERROR: Wrong number of arguments. Expected format: CLIENT <CLIENT-PORT> <USERAPP-URL> <CLIENT-URL>");
                 Console.WriteLine("Press any key to exit.");
                 Console.ReadLine();
                 return;
             }
+
+            Client cli = new Client();
+            cli.setClientURL(args[2]);
+            
+            TcpChannel chan = new TcpChannel(Int32.Parse(args[0]));
+            ChannelServices.RegisterChannel(chan, true);
+
+            //Activation
+            ClientServices clientServices = new ClientServices(cli);
+            RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
             
             Console.WriteLine("Client started. Press any key to exit...");
             Console.ReadLine();

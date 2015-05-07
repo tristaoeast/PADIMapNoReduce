@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -33,6 +34,7 @@ namespace PuppetMaster
         TcpChannel chan;
         PuppetMasterServices appServices;
         int clientPortCounter = 10000;
+        int userPortCounter = 40000;
 
         public PuppetMasterGUI()
         {
@@ -47,6 +49,7 @@ namespace PuppetMaster
             //Activation
             appServices = new PuppetMasterServices();
             RemotingServices.Marshal(appServices, "PM", typeof(PuppetMasterServices));
+            dbg(Dns.GetHostName());
 
             dbg("PM Services activated");
         }
@@ -59,8 +62,8 @@ namespace PuppetMaster
             String[] split = submText.Split(null);
             command = split[0];
             if (command.Equals("%", StringComparison.InvariantCultureIgnoreCase))
-                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Ignoring line..."});
-                //dbg("Ignoring line..." + Environment.NewLine);
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Ignoring line..." });
+            //dbg("Ignoring line..." + Environment.NewLine);
             else if (command.Equals("Submit", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length == 7)
@@ -128,20 +131,19 @@ namespace PuppetMaster
         public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
         {
             clientPortCounter++;
+            userPortCounter++;
             //dbg(clientPortCounter.ToString());
-            Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", clientPortCounter + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/U" + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/C");
+            Process.Start(@"..\..\..\UserApplication\bin\Debug\UserApplication.exe", userPortCounter + " " + "tcp://localhost:" + userPortCounter.ToString() + "/U" + " " + clientPortCounter + " " + "tcp://localhost:" + clientPortCounter.ToString() + "/C");
 
-            for (int i = 0; i < 1000000000; i++)
-            {
-                int j = 10000 / 3000;
-            }
-            //TODO: arrancar processo da app antes desta cangalhada toda
+            //for (int i = 0; i < 1000000000; i++)
+            //{
+            //    int j = 10000 / 3000;
+            //}
 
-
-            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter.ToString() + "/U");
+            //IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + clientPortCounter.ToString() + "/U");
+            IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + userPortCounter.ToString() + "/U");
             try
             {
-                //dbg(clientPortCounter.ToString());
                 app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
             }
             catch (RemotingException re)
@@ -168,7 +170,7 @@ namespace PuppetMaster
             //remoteDel.BeginInvoke(id, serviceUrl, entryUrl, asyncCallback, null);
 
             jobTrackerUrl = entryUrl;
-            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "End Worker remote call..." + puppetMasterUrl});
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "End Worker remote call..." + puppetMasterUrl });
             //dbg("End Worker Remote Call.. ");
         }
 
