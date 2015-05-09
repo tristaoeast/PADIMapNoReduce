@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -45,7 +46,9 @@ namespace JobTracker
             ChannelServices.RegisterChannel(channel, true);
 
             JobTracker jt = new JobTracker();
-            jt.SetJobTrackerURL(args[1]);
+            //jt.SetJobTrackerURL(args[1]);
+            jt.SetJobTrackerURL("tcp://" + Dns.GetHostName() + ":" + args[0] + "/JT");
+
             //Activation
             JobTrackerServices jts = new JobTrackerServices(jt);
             RemotingServices.Marshal(jts, "JT", typeof(JobTrackerServices));
@@ -78,6 +81,7 @@ namespace JobTracker
             decimal sizeSplit = fileSize / splits;
             finalSizeSplit = (long)System.Math.Round(sizeSplit);
             this.clientURL = clientURL;
+            this.nSplits = splits;
 
             foreach (KeyValuePair<int, string> kvp in workersRegistry)
             {
@@ -123,7 +127,7 @@ namespace JobTracker
 
         private void ManageWorkToWorker(int id)
         {
-            Console.WriteLine("ENTREI");
+            Console.WriteLine("sentSplits: " + sentSplits + " nSplits: " + nSplits);
             if (sentSplits >= nSplits)
             {
                 Console.WriteLine("ENTREI222");
@@ -161,7 +165,7 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!"); 
+            Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!");
         }
 
         public long getSentBytes()

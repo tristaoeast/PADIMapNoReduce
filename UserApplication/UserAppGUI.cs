@@ -7,6 +7,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -42,7 +43,7 @@ namespace UserApplication
                 while (true);
             }
 
-            clientURL = args[4];
+            clientURL = "tcp://" + Dns.GetHostName() + ":"+ args[3] + "/C";
             userAppURL = args[2];
             userPort = Int32.Parse(args[1]);
             clientPort = Int32.Parse(args[3]);

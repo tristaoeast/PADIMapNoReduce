@@ -25,6 +25,7 @@ namespace Worker
         String jobTrackerURL = String.Empty;
         String clientURL = String.Empty;
         int myId;
+        int port;
 
 
         static void Main(string[] args)
@@ -43,9 +44,9 @@ namespace Worker
 
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
-            int port = Int32.Parse(split2[0]);
+            w.setPort(Int32.Parse(split2[0]));
 
-            TcpChannel channel = new TcpChannel(port);
+            TcpChannel channel = new TcpChannel(Int32.Parse(split2[0]));
             ChannelServices.RegisterChannel(channel, true);
 
             //Activation
@@ -65,7 +66,7 @@ namespace Worker
             //TODO: IF SERVICE-URL == ENTRY-URL create worker 
             if (args[1].Equals(entryURL, StringComparison.OrdinalIgnoreCase))
             {
-                int jtPort = port + 20000;
+                int jtPort = Int32.Parse(split2[0]) + 20000;
                 string jtURL = "tcp://" + Dns.GetHostName() + ":" + jtPort + "/JT";
                 w.SetJobTrackerURL(jtURL);
                 Process.Start(@"..\..\..\JobTracker\bin\Debug\JobTracker.exe", jtPort + " " + jtURL);
@@ -74,10 +75,15 @@ namespace Worker
             //REGISTER WITH WORKER, WHICH FORWARDS TO JT
             IWorker entryWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
-            remoteDel.BeginInvoke(Int32.Parse(args[0]), args[1], null, null);
+            remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0]+ "/W", null, null);
 
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + " and URL: " + args[1] + "...");
             System.Console.ReadLine();
+        }
+
+        public void setPort(int p)
+        {
+            port = p;
         }
 
         public void setId(int id)
@@ -213,13 +219,13 @@ namespace Worker
                     result.Add(kvp);
                 }
             }
-            using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
-            {
-                foreach (var l in result)
-                {
-                    outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
-                }
-            }
+            //using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
+            //{
+            //    foreach (var l in result)
+            //    {
+            //        outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
+            //    }
+            //}
             Console.WriteLine("Sending result of split: " + split + " to client: " + clientURL);
             worker.SendResultToClient(result, split, clientURL);
             Console.WriteLine("Result sent");
