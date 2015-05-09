@@ -11,6 +11,7 @@ using System.Reflection;
 using System.IO;
 using System.Diagnostics;
 using System.Net;
+using System.Threading;
 
 namespace Worker
 {
@@ -135,8 +136,6 @@ namespace Worker
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
             remoteDel.BeginInvoke(id, url, null, null);
         }
-
-        //TODO: metodo para o servico status a chamar pelo puppet
         public void StatusRequest() 
         {
             Console.WriteLine("Worker " + getId() + " is alive!");
@@ -144,6 +143,13 @@ namespace Worker
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADRequestJTStatus remoteStat = new RADRequestJTStatus(jobTracker.StatusRequest);
             remoteStat.BeginInvoke(null, null);
+        }
+        public void Freeze(bool jt)
+        {
+            Console.WriteLine("Freezing Worker " + getId() + " now");
+            //TODO: 
+            //se jt for false manda dormir o worker
+            //se jt for true manda dormir o jobtracker (esse serviço ainda nao esta implementado)
         }
     }
 
@@ -249,6 +255,12 @@ namespace Worker
         {
             Console.WriteLine("Trying to get status...");
             worker.StatusRequest();
+        }
+
+        public void Freeze(bool jt)
+        {
+            Console.WriteLine("Trying to freeze...");
+            worker.Freeze(jt);
         }
     }
 }

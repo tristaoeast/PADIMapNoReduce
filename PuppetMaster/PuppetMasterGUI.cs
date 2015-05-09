@@ -25,6 +25,7 @@ namespace PuppetMaster
     public delegate String RemoteAsyncDelegateNewWorker(String id, String serviceUrl, String entryUrl);
     public delegate void FormWriteToOutput(String text);
     public delegate void RADRequestWStatus();
+    public delegate void RADFreeze(bool jt);
 
     public partial class PuppetMasterGUI : Form
     {
@@ -36,7 +37,7 @@ namespace PuppetMaster
         PuppetMasterServices appServices;
         int clientPortCounter = 10000;
         int userPortCounter = 40000;
-        List<String> workersList = new List<string>();
+        List<KeyValuePair<String, String>> workersList = new List<KeyValuePair<string, string>>();
 
         public PuppetMasterGUI()
         {
@@ -113,6 +114,10 @@ namespace PuppetMaster
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
                 //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                if (split.Length != 2)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: FREEZEW command must have 1 argument" });
+                else
+                    Freeze(split[1], false);  
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -195,7 +200,8 @@ namespace PuppetMaster
             this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id});
 
             //dbg("Start Worker Proc ");
-            workersList.Add(serviceUrl);
+            //workersList.Add(serviceUrl);
+            workersList.Add(new KeyValuePair<string, string>(id, serviceUrl));
             Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
@@ -207,12 +213,32 @@ namespace PuppetMaster
 
         public void Status()
         { 
-            foreach (String wURL in workersList){
+            foreach(KeyValuePair<string, string> wList in workersList){
                 //this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
-                IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
+                IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wList.Value);
                 RADRequestWStatus remoteStat = new RADRequestWStatus(worker.StatusRequest);
                 remoteStat.BeginInvoke(null, null);
             }
+        }
+
+        public void Freeze(String id, bool jt)
+        {
+            String wURL = getURL(id);
+            IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
+            RADFreeze remoteFreeze = new RADFreeze(worker.Freeze);
+            remoteFreeze.BeginInvoke(jt, null, null);
+        }
+
+        public String getURL(String id)
+        {
+            foreach (KeyValuePair<string, string> wList in workersList)
+            {
+                if (wList.Key == id)
+                {
+                    return wList.Value;
+                }
+            }
+            return null;
         }
 
         public void loadScript(string scriptPath)
@@ -262,6 +288,7 @@ namespace PuppetMaster
     public delegate void DelWorker(String id, String serviceUrl, String entryUrl);
     public delegate void DelDebug(string cenas);
     public delegate void DelStatus();
+    public delegate void DelFreeze(String id, bool jt);
 
     public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster
     {
@@ -277,9 +304,14 @@ namespace PuppetMaster
             return "Sucessfully launched a new Worker";
         }
 
-        public void Status(int id, String url)
+        public void Status()
         {
             form.Invoke(new DelStatus(form.Status), null);
+        }
+
+        public void Freeze(String id, bool jt)
+        {
+            form.Invoke(new DelFreeze(form.Freeze), new Object[] {id, jt});
         }
     }
 }
