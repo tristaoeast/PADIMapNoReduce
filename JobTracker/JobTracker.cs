@@ -20,6 +20,7 @@ namespace JobTracker
         long finalSizeSplit = 0;
         IDictionary<int, string> workersRegistry = new Dictionary<int, string>();
         String clientURL;
+        String jtURL;
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
         public delegate void DelegateWorkToWorker(int id);
@@ -44,6 +45,7 @@ namespace JobTracker
             ChannelServices.RegisterChannel(channel, true);
 
             JobTracker jt = new JobTracker();
+            jt.SetJobTrackerURL(args[1]);
             //Activation
             JobTrackerServices jts = new JobTrackerServices(jt);
             RemotingServices.Marshal(jts, "JT", typeof(JobTrackerServices));
@@ -52,6 +54,10 @@ namespace JobTracker
             Console.ReadLine();
         }
 
+        public void SetJobTrackerURL(string url)
+        {
+            jtURL = url;
+        }
         public IList<long> GetSplitRange()
         {
             IList<long> splitsRange = new List<long>();
@@ -148,6 +154,11 @@ namespace JobTracker
             workersRegistry.Add(id, url);
         }
 
+        public void StatusRequest()
+        {
+            Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!"); 
+        }
+
         public long getSentBytes()
         {
             return sentBytes;
@@ -207,6 +218,11 @@ namespace JobTracker
         public void RegisterWorker(int id, string url)
         {
             jobTracker.RegisterWorker(id, url);
+        }
+
+        public void StatusRequest()
+        {
+            jobTracker.StatusRequest();
         }
     }
 }

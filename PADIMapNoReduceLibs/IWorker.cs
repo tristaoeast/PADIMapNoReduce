@@ -12,5 +12,6 @@ namespace PADIMapNoReduceLibs
         bool SendMapper(String className, byte[] code);
         void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
         void RegisterWorker(int id, string url);
+        void StatusRequest();
     }
 }

@@ -148,7 +148,6 @@ namespace Client
         {
             //while (String.IsNullOrEmpty(entryURL)) ;
 
-
             client.SaveDirs(inputFile, outputDirectory);
             //IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
 
@@ -173,10 +172,12 @@ namespace Client
         public void ReturnResult(IList<KeyValuePair<string, string>> result, int split)
         {
             //guardar no outputFile 
-            Console.WriteLine("Got result from mapping of split: " + split);
             String outDir = client.GetOutputDir();
             //TODO: make a new thread to write result to file
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(outDir + split.ToString() + ".out"))
+            Console.WriteLine("Got result from mapping of split: " + split);
+            String outFile = outDir + "\\" +  split.ToString() + ".out";
+            Console.WriteLine("Writing to file: " + outFile);
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(outFile))
             {
                 foreach (var line in result)
                 {
