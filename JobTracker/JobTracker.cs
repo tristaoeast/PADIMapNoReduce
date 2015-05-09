@@ -108,13 +108,14 @@ namespace JobTracker
             AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
             Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
-            remoteDel.BeginInvoke(start, end, split, clientURL, null, null);
+            remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, null);
         }
 
         private void CallBack(IAsyncResult ar)
         {
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
             int id = (int)rad.EndInvoke(ar);
+            Console.WriteLine("Worker with ID: " + id + "finished his split.");
             DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
             delegateWorkToWorker(id);
             //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
@@ -122,8 +123,10 @@ namespace JobTracker
 
         private void ManageWorkToWorker(int id)
         {
+            Console.WriteLine("ENTREI");
             if (sentSplits >= nSplits)
             {
+                Console.WriteLine("ENTREI222");
                 //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
                 //afinal já não deve ser preciso para para já fica aqui :)
             }
@@ -134,6 +137,7 @@ namespace JobTracker
                 {
                     //long newEnd = (fileSize - sentBytes) + sentBytes;
                     //os bytes foram todos enviados! logo
+                    Console.WriteLine("11111 Submitting new split to worker " + id);
                     SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, this.clientURL, id);
                     sentBytes = fileSize;
                     sentSplits++;
@@ -141,6 +145,7 @@ namespace JobTracker
                 }
                 else
                 {
+                    Console.WriteLine("22222 Submitting new split to worker " + id);
                     SubmitJobToWorker(sentBytes, end, sentSplits + 1, this.clientURL, id);
                     sentBytes += finalSizeSplit + 1;
                     sentSplits++;

@@ -108,7 +108,6 @@ namespace Worker
         public void SendResultToClient(IList<KeyValuePair<string, string>> result, int split, string url)
         {
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
-            //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
             remoteDel.BeginInvoke(result, split, null, null);
@@ -192,9 +191,6 @@ namespace Worker
             byte[] fileSplitByte = client.GetSplit(start, end);
             String filePath = split.ToString() + ".in";
             File.WriteAllBytes(filePath, fileSplitByte);
-
-            // Converts byte[] into a string of the split
-            //String fileSplit = Encoding.UTF8.GetString(fileSplitByte);
 
             // Read each line from the string
             System.IO.StreamReader file = new System.IO.StreamReader(filePath);

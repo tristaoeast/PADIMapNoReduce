@@ -102,12 +102,10 @@ namespace Client
             {
                 String line = stream.ReadLine();
                 byteCounter += line.Length + System.Environment.NewLine.Length;
-                //Console.WriteLine("bc:" + byteCounter + " line:" + line);
                 if (byteCounter >= start + 1)
                 {
                     while (byteCounter <= end + 1)
                     {
-                        //Console.WriteLine("bc:" + byteCounter + " line:" + line);
                         result += line + System.Environment.NewLine;
                         //Read next line
                         if (!stream.EndOfStream)
@@ -122,7 +120,6 @@ namespace Client
                 }
                 if (exitWhile) break;
             }
-            //result = result.Remove(result.Length - System.Environment.NewLine.Length);
             return Encoding.UTF8.GetBytes(result);
         }
     }
@@ -146,17 +143,11 @@ namespace Client
 
         public void Submit(String inputFile, int splits, String outputDirectory, String className, byte[] code)
         {
-            //while (String.IsNullOrEmpty(entryURL)) ;
-
             client.SaveDirs(inputFile, outputDirectory);
-            //IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
-
-            //client.setFileBytes();
 
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
             client.SubmitJob(fileSize, splits, className, code);
-            //newWorker.SubmitJobToTracker(fileSize, splits, className, code, client.getClientURL());
             client.dbg("New Job submitted to JobTracker at" + entryURL);
 
         }
