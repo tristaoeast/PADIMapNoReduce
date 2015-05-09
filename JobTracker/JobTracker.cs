@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JobTracker
@@ -22,6 +23,7 @@ namespace JobTracker
         IDictionary<int, string> workersRegistry = new Dictionary<int, string>();
         String clientURL;
         String jtURL;
+        bool freeze = false;
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
         public delegate void DelegateWorkToWorker(int id);
@@ -170,6 +172,7 @@ namespace JobTracker
 
         public void StatusRequest()
         {
+            handleFreeze();
             Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!");
         }
 
@@ -207,6 +210,29 @@ namespace JobTracker
         {
             nSplits = setNSplits;
         }
+
+        public void Freeze()
+        {
+            Console.WriteLine("Freezing JobTracker now");
+            freeze = true;
+        }
+
+        public void Unfreeze()
+        {
+            Console.WriteLine("Unfreezing JobTracker now");
+            freeze = false;
+        }
+
+        private void handleFreeze()
+        {
+            lock (this)
+            {
+                if (freeze)
+                {
+                    Monitor.Wait(this);
+                }
+            }
+        }
     }
 
     public class JobTrackerServices : MarshalByRefObject, IJobTracker
@@ -237,6 +263,18 @@ namespace JobTracker
         public void StatusRequest()
         {
             jobTracker.StatusRequest();
+        }
+
+        public void Freeze()
+        {
+            Console.WriteLine("Trying to freeze...");
+            jobTracker.Freeze();
+        }
+
+        public void Unfreeze()
+        {
+            Console.WriteLine("Trying to Unfreeze...");
+           jobTracker.Unfreeze();
         }
     }
 }

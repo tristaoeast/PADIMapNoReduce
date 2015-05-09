@@ -114,15 +114,13 @@ namespace PuppetMaster
             }
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: FREEZEW command must have 1 argument" });
                 else
                     Freeze(split[1], false);  
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
-            {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+            {                
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: UNFREEZEW command must have 1 argument" });
                 else
@@ -130,11 +128,17 @@ namespace PuppetMaster
             }
             else if (command.Equals("FreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                if (split.Length != 2)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: FREEZEC command must have 1 argument" });
+                else
+                    Freeze(split[1], true);  
             }
             else if (command.Equals("UnfreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                if (split.Length != 2)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: UNFREEZEC command must have 1 argument" });
+                else
+                    Unfreeze(split[1], true);  
             }
             else
             {

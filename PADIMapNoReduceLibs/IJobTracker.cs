@@ -12,5 +12,7 @@ namespace PADIMapNoReduceLibs
         void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL);
         void RegisterWorker(int id, String url);
         void StatusRequest();
+        void Freeze();
+        void Unfreeze();
     }
 }

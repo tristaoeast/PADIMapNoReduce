@@ -20,6 +20,7 @@ namespace Worker
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
     public delegate void RADRequestJTStatus();
+    public delegate void RADFreezeUnfreezeJT();
 
     class Worker
     {
@@ -148,20 +149,38 @@ namespace Worker
         }
         public void Freeze(bool jt)
         {
-            Console.WriteLine("Freezing Worker " + getId() + " now");
-            freeze = true;
             //TODO: 
             //se jt for false manda dormir o worker
-            //se jt for true manda dormir o jobtracker (esse serviço ainda nao esta implementado)
+            if (!jt)
+            {
+                freeze = true;
+                Console.WriteLine("Freezing Worker " + getId() + " now");
+            }
+            //se jt for true manda dormir so o jobtracker
+            else
+            {
+                IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+                RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Freeze);
+                remoteFreezeUnfreeze.BeginInvoke(null, null);
+            }
         }
 
         public void Unfreeze(bool jt)
         {
-            Console.WriteLine("Unfreezing Worker " + getId() + " now");
-            freeze = false;
             //TODO: 
-            //se jt for false manda dormir o worker
-            //se jt for true manda dormir o jobtracker (esse serviço ainda nao esta implementado)
+            //se jt for false manda acordar o worker
+            if (!jt)
+            {
+                freeze = false;
+                Console.WriteLine("Unfreezing Worker " + getId() + " now");
+            }
+            //se jt for true manda acordar o jobtracker
+            else
+            {
+                IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+                RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Unfreeze);
+                remoteFreezeUnfreeze.BeginInvoke(null, null);
+            }
         }
 
         private void handleFreeze()
