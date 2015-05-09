@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -12,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Client
 {
+
+    public delegate void RADSubmitJob(long fileSize, int splits, string className, byte[] code, string clientURL);
+
     public class Client
     {
         String inputFile = null;
@@ -32,15 +36,16 @@ namespace Client
             }
 
             Client cli = new Client();
-            cli.setClientURL(args[2]);
-            
+            cli.setClientURL("tcp://" + Dns.GetHostName() + ":" + args[0] + "/C");
+            //cli.setClientURL(args[3]);
+
             TcpChannel chan = new TcpChannel(Int32.Parse(args[0]));
             ChannelServices.RegisterChannel(chan, true);
 
             //Activation
             ClientServices clientServices = new ClientServices(cli);
             RemotingServices.Marshal(clientServices, "C", typeof(ClientServices));
-            
+
             Console.WriteLine("Client started. Press any key to exit...");
             Console.ReadLine();
         }
@@ -76,18 +81,15 @@ namespace Client
             Console.WriteLine(s);
         }
 
-        //public void setFileBytes()
-        //{
-        //    fileBytes = File.ReadAllBytes(inputFile);
-        //}
+        public void SubmitJob(long fileSize, int splits, string className, byte[] code)
+        {
+            Console.WriteLine("Submitting job to tracker at: " + entryUrl + " from client: "+ clientURL);
+            IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), entryUrl);
+            //newWorker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
+            RADSubmitJob remoteDel = new RADSubmitJob(worker.SubmitJobToTracker);
+            remoteDel.BeginInvoke(fileSize, splits, className, code, clientURL, null, null);
 
-        //public byte[] getFileBytes(long init, long end)
-        //{
-        //    byte[] subset = new byte[end - init + 1];
-        //    Array.Copy(fileBytes, init, subset, 0, end - init + 1);
-
-        //    return subset;
-        //}
+        }
 
         public byte[] GetSplit(long startIndex, long endIndex)
         {
@@ -128,7 +130,7 @@ namespace Client
     public class ClientServices : MarshalByRefObject, IClient
     {
         public Client client;
-        String urlJobTracker = null;
+        String entryURL = null;
         byte[] code;
 
         public ClientServices(Client cli)
@@ -136,27 +138,27 @@ namespace Client
             client = cli;
         }
 
-        public void Init(String entryURL)
+        public void Init(String eURL)
         {
-            client.dbg("PASSEI NO INIT");
-            urlJobTracker = entryURL;
-            client.SetEntryURL(entryURL);
+            entryURL = eURL;
+            client.SetEntryURL(eURL);
         }
+
         public void Submit(String inputFile, int splits, String outputDirectory, String className, byte[] code)
         {
-            //while (String.IsNullOrEmpty(urlJobTracker)) ;
+            //while (String.IsNullOrEmpty(entryURL)) ;
 
-            client.dbg("New Job submitted to JobTracker at" + urlJobTracker);
 
             client.SaveDirs(inputFile, outputDirectory);
-            IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), urlJobTracker);
+            //IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
 
             //client.setFileBytes();
 
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
-
-            newWorker.SubmitJobToTracker(fileSize, splits, className, code, client.getClientURL());
+            client.SubmitJob(fileSize, splits, className, code);
+            //newWorker.SubmitJobToTracker(fileSize, splits, className, code, client.getClientURL());
+            client.dbg("New Job submitted to JobTracker at" + entryURL);
 
         }
 
@@ -171,7 +173,9 @@ namespace Client
         public void ReturnResult(IList<KeyValuePair<string, string>> result, int split)
         {
             //guardar no outputFile 
+            Console.WriteLine("Got result from mapping of split: " + split);
             String outDir = client.GetOutputDir();
+            //TODO: make a new thread to write result to file
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(outDir + split.ToString() + ".out"))
             {
                 foreach (var line in result)

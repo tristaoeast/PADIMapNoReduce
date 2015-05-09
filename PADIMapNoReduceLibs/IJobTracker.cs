@@ -8,7 +8,7 @@ namespace PADIMapNoReduceLibs
 {
     public interface IJobTracker
     {
-        IList<int> GetSplitRange();
+        IList<long> GetSplitRange();
         void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL);
         void RegisterWorker(int id, String url);
     }

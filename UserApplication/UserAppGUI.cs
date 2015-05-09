@@ -17,7 +17,7 @@ using System.Windows.Forms;
 namespace UserApplication
 {
     public delegate void RADClientInit(string entryURL);
-    public delegate void RADClientSubmit(string inputFile, Int32 splits, string output, string mapName, byte[] code);
+    public delegate void RADClientSubmit(string inputFile, int splits, string output, string mapName, byte[] code);
 
     public partial class UserAppGUI : Form
     {
@@ -74,7 +74,7 @@ namespace UserApplication
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
-        public void Submit(String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code, String entryUrl)
+        public void Submit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryUrl)
         {
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
@@ -119,7 +119,7 @@ namespace UserApplication
     }
 
     delegate void DelInit(String entryUrl);
-    delegate void DelSubmit(String inputFile, String outputDirectory, Int32 splists, String mapClassName, byte[] code, String entryURL);
+    delegate void DelSubmit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryURL);
 
     public class UserAppServices : MarshalByRefObject, IApp
     {
@@ -130,7 +130,7 @@ namespace UserApplication
             form = f;
         }
 
-        public void Submit(String entryUrl, String inputFile, String outputDirectory, Int32 splits, String mapClassName, byte[] code)
+        public void Submit(String entryUrl, String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
             form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code, entryUrl });

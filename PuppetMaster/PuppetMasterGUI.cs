@@ -128,7 +128,7 @@ namespace PuppetMaster
             }
         }
 
-        public void Submit(String entryUrl, String inputFile, String outputDir, Int32 splits, String mapClassName, byte[] dll)
+        public void Submit(String entryUrl, String inputFile, String outputDir, int splits, String mapClassName, byte[] dll)
         {
             clientPortCounter++;
             userPortCounter++;

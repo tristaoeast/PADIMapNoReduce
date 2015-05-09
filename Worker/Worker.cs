@@ -109,11 +109,13 @@ namespace Worker
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             //AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
+            Console.WriteLine("Sending result of split: " + split + " to client: " + url);
             remoteDel.BeginInvoke(result, split, null, null);
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            Console.WriteLine("Received SubmitJob from: " + clientURL + ". Forwarding to: " + jobTrackerURL);
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADSubmitJobToTracker remoteDel = new RADSubmitJobToTracker(jobTracker.SubmitJob);
             remoteDel.BeginInvoke(fileSize, splits, className, code, clientURL, null, null);
@@ -145,7 +147,7 @@ namespace Worker
         {
             Console.WriteLine("Received SendMapper");
             Assembly assembly = Assembly.Load(code);
-            Console.WriteLine("Received SendMapper2");
+            
             // Walk through each type in the assembly looking for our class
             foreach (Type type in assembly.GetTypes())
             {
@@ -203,13 +205,17 @@ namespace Worker
                 {
                     result.Add(kvp);
                 }
-                Console.WriteLine("Map call result for line: " + line + "  was: ");
-                foreach (KeyValuePair<string, string> p in result)
+            }
+            using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
+            {
+                foreach (var l in result)
                 {
-                    Console.WriteLine("key: " + p.Key + ", value: " + p.Value);
+                    outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
                 }
             }
+            Console.WriteLine("Sending result of split: " + split + " to client: " + clientURL);
             worker.SendResultToClient(result, split, clientURL);
+            Console.WriteLine("Result sent");
             return worker.getId();
         }
 

@@ -52,9 +52,9 @@ namespace JobTracker
             Console.ReadLine();
         }
 
-        public IList<int> GetSplitRange()
+        public IList<long> GetSplitRange()
         {
-            IList<int> splitsRange = new List<int>();
+            IList<long> splitsRange = new List<long>();
             //inicio, fim e numero do split
 
             return splitsRange;
@@ -70,7 +70,7 @@ namespace JobTracker
         public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
             decimal sizeSplit = fileSize / splits;
-            finalSizeSplit = (int)System.Math.Round(sizeSplit);
+            finalSizeSplit = (long)System.Math.Round(sizeSplit);
             this.clientURL = clientURL;
 
             foreach (KeyValuePair<int, string> kvp in workersRegistry)
@@ -193,14 +193,14 @@ namespace JobTracker
             jobTracker = jt;
         }
 
-        public IList<int> GetSplitRange()
+        public IList<long> GetSplitRange()
         {
             return jobTracker.GetSplitRange();
         }
 
         public void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            Console.WriteLine("Submit job");
+            Console.WriteLine("Submit job received from :" + clientURL);
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
 
