@@ -75,6 +75,7 @@ namespace Worker
             //REGISTER WITH WORKER, WHICH FORWARDS TO JT
             IWorker entryWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
+            Console.WriteLine("Sending registration to: " + entryURL);
             remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0]+ "/W", null, null);
 
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + " and URL: " + args[1] + "...");
@@ -187,7 +188,7 @@ namespace Worker
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
         {
-            Console.WriteLine("Received SubmitJobToWorker");
+            Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
             worker.SetClientURL(clientURL);
 
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
@@ -219,13 +220,13 @@ namespace Worker
                     result.Add(kvp);
                 }
             }
-            //using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
-            //{
-            //    foreach (var l in result)
-            //    {
-            //        outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
-            //    }
-            //}
+            using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
+            {
+                foreach (var l in result)
+                {
+                    outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
+                }
+            }
             Console.WriteLine("Sending result of split: " + split + " to client: " + clientURL);
             worker.SendResultToClient(result, split, clientURL);
             Console.WriteLine("Result sent");
