@@ -78,7 +78,7 @@
             this.Controls.Add(this.lbl_url_cli);
             this.Controls.Add(this.bt_init);
             this.Name = "UserAppGUI";
-            this.Text = "Form1";
+            this.Text = "User Application";
             this.ResumeLayout(false);
             this.PerformLayout();
 

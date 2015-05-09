@@ -160,13 +160,13 @@ namespace PuppetMaster
             catch (SocketException e)
             {
                 this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "SocketException: " + e.ErrorCode });
-                //dbg("Exceeeeeption: " + e.ErrorCode.ToString() + Environment.NewLine);
+                //dbg("Socket Exception: " + e.ErrorCode.ToString() + Environment.NewLine);
             }
         }
 
         public void Worker(String id, String puppetMasterUrl, String serviceUrl, String entryUrl)
         {
-            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker remote call..." + puppetMasterUrl });
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker remote call... " + puppetMasterUrl });
             //dbg("Start Worker Remote Call... " + puppetMasterUrl);
             IPuppetMaster puppetW = (IPuppetMaster)Activator.GetObject(typeof(IPuppetMaster), puppetMasterUrl);
 
@@ -192,7 +192,7 @@ namespace PuppetMaster
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
         {
-            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id + " and serviceUrl: " + serviceUrl });
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id});
 
             //dbg("Start Worker Proc ");
             workersList.Add(serviceUrl);
@@ -208,7 +208,7 @@ namespace PuppetMaster
         public void Status()
         { 
             foreach (String wURL in workersList){
-                this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
+                //this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
                 IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
                 RADRequestWStatus remoteStat = new RADRequestWStatus(worker.StatusRequest);
                 remoteStat.BeginInvoke(null, null);
@@ -257,27 +257,6 @@ namespace PuppetMaster
                 dbg("Please enter a command" + Environment.NewLine);
         }
 
-        private void bt_pmPort_Click(object sender, EventArgs e)
-        {
-            int req_port;
-            if (!string.IsNullOrWhiteSpace(tb_pmPort.Text))
-            {
-                req_port = Int32.Parse(tb_pmPort.Text);
-                if (req_port < 30000 && req_port > 20000)
-                {
-                    dbg("Port before click: " + port);
-                    port = req_port;
-                    dbg("Port after click: " + port);
-                }
-                else
-                    dbg("Requested Port out of range! Must be between 20001 and 29999" + Environment.NewLine);
-            }
-            else
-                dbg("Default PuppetMaster port 20001 being used" + Environment.NewLine);
-        }
-
-
-
     }
 
     public delegate void DelWorker(String id, String serviceUrl, String entryUrl);
@@ -292,7 +271,7 @@ namespace PuppetMaster
         {
             DelDebug del = new DelDebug(form.dbg);
 
-            //form.Invoke(del, new object[] { "Received ID: " + id + " ServiceURL: " + serviceUrl + " EntryURL: " + entryUrl });
+            form.Invoke(del, new object[] { "Received ID: " + id + " ServiceURL: " + serviceUrl + " EntryURL: " + entryUrl });
             form.Invoke(new DelWorker(form.startWorkerProc), new Object[] { id, serviceUrl, entryUrl });
 
             return "Sucessfully launched a new Worker";
