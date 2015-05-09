@@ -26,6 +26,7 @@ namespace PuppetMaster
     public delegate void FormWriteToOutput(String text);
     public delegate void RADRequestWStatus();
     public delegate void RADFreeze(bool jt);
+    public delegate void RADUnfreeze(bool jt);
 
     public partial class PuppetMasterGUI : Form
     {
@@ -122,6 +123,10 @@ namespace PuppetMaster
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
                 //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                if (split.Length != 2)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: UNFREEZEW command must have 1 argument" });
+                else
+                    Unfreeze(split[1], false);  
             }
             else if (command.Equals("FreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -226,6 +231,15 @@ namespace PuppetMaster
             String wURL = getURL(id);
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
             RADFreeze remoteFreeze = new RADFreeze(worker.Freeze);
+            remoteFreeze.BeginInvoke(jt, null, null);
+        }
+
+
+        private void Unfreeze(String id, bool jt)
+        {
+            String wURL = getURL(id);
+            IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
+            RADUnfreeze remoteFreeze = new RADUnfreeze(worker.Unfreeze);
             remoteFreeze.BeginInvoke(jt, null, null);
         }
 

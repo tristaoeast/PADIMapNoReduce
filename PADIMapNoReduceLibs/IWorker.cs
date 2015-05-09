@@ -14,5 +14,6 @@ namespace PADIMapNoReduceLibs
         void RegisterWorker(int id, string url);
         void StatusRequest();
         void Freeze(bool jt);
+        void Unfreeze(bool jt);
     }
 }

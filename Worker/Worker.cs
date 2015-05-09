@@ -27,12 +27,13 @@ namespace Worker
         String clientURL = String.Empty;
         int myId;
         int port;
-
+        bool freeze = false;
+        
 
         static void Main(string[] args)
         {
-            Worker w = new Worker();
 
+            Worker w = new Worker();
             Console.WriteLine(args[0]);
 
             if (args.Length < 2)
@@ -138,6 +139,7 @@ namespace Worker
         }
         public void StatusRequest() 
         {
+            handleFreeze();
             Console.WriteLine("Worker " + getId() + " is alive!");
             //request jobtracker status
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
@@ -147,9 +149,30 @@ namespace Worker
         public void Freeze(bool jt)
         {
             Console.WriteLine("Freezing Worker " + getId() + " now");
+            freeze = true;
             //TODO: 
             //se jt for false manda dormir o worker
             //se jt for true manda dormir o jobtracker (esse serviço ainda nao esta implementado)
+        }
+
+        public void Unfreeze(bool jt)
+        {
+            Console.WriteLine("Unfreezing Worker " + getId() + " now");
+            freeze = false;
+            //TODO: 
+            //se jt for false manda dormir o worker
+            //se jt for true manda dormir o jobtracker (esse serviço ainda nao esta implementado)
+        }
+
+        private void handleFreeze()
+        {
+            lock (this)
+            {
+                if (freeze)
+                {
+                    Monitor.Wait(this);
+                }
+            }
         }
     }
 
@@ -261,6 +284,12 @@ namespace Worker
         {
             Console.WriteLine("Trying to freeze...");
             worker.Freeze(jt);
+        }
+
+        public void Unfreeze(bool jt)
+        {
+            Console.WriteLine("Trying to Unfreeze...");
+            worker.Unfreeze(jt);
         }
     }
 }
