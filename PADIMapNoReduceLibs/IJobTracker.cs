@@ -11,5 +11,6 @@ namespace PADIMapNoReduceLibs
         IList<int> GetSplitRange();
         void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL);
         void RegisterWorker(int id, String url);
+        void StatusRequest();
     }
 }

@@ -18,6 +18,7 @@ namespace Worker
     public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string, string>> result, int split);
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
+    public delegate void RADRequestJTStatus();
 
     class Worker
     {
@@ -126,6 +127,16 @@ namespace Worker
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
             remoteDel.BeginInvoke(id, url, null, null);
         }
+
+        //TODO: metodo para o servico status a chamar pelo puppet
+        public void StatusRequest() 
+        {
+            Console.WriteLine("Worker " + getId() + " is alive!");
+            //request jobtracker status
+            IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+            RADRequestJTStatus remoteStat = new RADRequestJTStatus(jobTracker.StatusRequest);
+            remoteStat.BeginInvoke(null, null);
+        }
     }
 
     public delegate void DelRegisterWorker(int id, string url);
@@ -223,6 +234,12 @@ namespace Worker
         {
             Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
             worker.RegisterWorker(id, url);
+        }
+
+        public void StatusRequest()
+        {
+            Console.WriteLine("Trying to get status...");
+            worker.StatusRequest();
         }
     }
 }

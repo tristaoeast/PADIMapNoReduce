@@ -24,6 +24,7 @@ namespace PuppetMaster
 
     public delegate String RemoteAsyncDelegateNewWorker(String id, String serviceUrl, String entryUrl);
     public delegate void FormWriteToOutput(String text);
+    public delegate void RADRequestWStatus();
 
     public partial class PuppetMasterGUI : Form
     {
@@ -35,6 +36,7 @@ namespace PuppetMaster
         PuppetMasterServices appServices;
         int clientPortCounter = 10000;
         int userPortCounter = 40000;
+        List<String> workersList = new List<string>();
 
         public PuppetMasterGUI()
         {
@@ -57,6 +59,7 @@ namespace PuppetMaster
         {
             tb_Output.AppendText(text + Environment.NewLine);
         }
+
         private void processCommand(String submText)
         {
             String[] split = submText.Split(null);
@@ -98,7 +101,10 @@ namespace PuppetMaster
             }
             else if (command.Equals("Status", StringComparison.InvariantCultureIgnoreCase))
             {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);
+                if (split.Length != 1)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: STATUS command has no arguments" });
+                else
+                    Status();   
             }
             else if (command.Equals("SlowW", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -186,9 +192,10 @@ namespace PuppetMaster
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
         {
-            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process" });
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id + " and serviceUrl: " + serviceUrl });
 
             //dbg("Start Worker Proc ");
+            workersList.Add(serviceUrl);
             Process.Start(@"..\..\..\Worker\bin\Debug\Worker.exe", id + " " + serviceUrl + " " + jobTrackerUrl);
         }
 
@@ -196,6 +203,16 @@ namespace PuppetMaster
         {
             int interval = secs * 1000;
             Thread.Sleep(interval);
+        }
+
+        public void Status()
+        { 
+            foreach (String wURL in workersList){
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
+                IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
+                RADRequestWStatus remoteStat = new RADRequestWStatus(worker.StatusRequest);
+                remoteStat.BeginInvoke(null, null);
+            }
         }
 
         public void loadScript(string scriptPath)
@@ -265,6 +282,7 @@ namespace PuppetMaster
 
     public delegate void DelWorker(String id, String serviceUrl, String entryUrl);
     public delegate void DelDebug(string cenas);
+    public delegate void DelStatus();
 
     public class PuppetMasterServices : MarshalByRefObject, IPuppetMaster
     {
@@ -278,6 +296,11 @@ namespace PuppetMaster
             form.Invoke(new DelWorker(form.startWorkerProc), new Object[] { id, serviceUrl, entryUrl });
 
             return "Sucessfully launched a new Worker";
+        }
+
+        public void Status(int id, String url)
+        {
+            form.Invoke(new DelStatus(form.Status), null);
         }
     }
 }
