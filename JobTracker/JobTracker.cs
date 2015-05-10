@@ -8,6 +8,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JobTracker
@@ -22,6 +23,7 @@ namespace JobTracker
         IDictionary<int, string> workersRegistry = new Dictionary<int, string>();
         String clientURL;
         String jtURL;
+        bool freeze = false;
 
         int jobsFinished = 0;
 
@@ -226,6 +228,29 @@ namespace JobTracker
         {
             nSplits = setNSplits;
         }
+
+        public void Freeze()
+        {
+            Console.WriteLine("Freezing JobTracker now");
+            freeze = true;
+        }
+
+        public void Unfreeze()
+        {
+            Console.WriteLine("Unfreezing JobTracker now");
+            freeze = false;
+        }
+
+        public void handleFreeze()
+        {
+            lock (this)
+            {
+                if (freeze)
+                {
+                    Monitor.Wait(this);
+                }
+            }
+        }
     }
 
     public class JobTrackerServices : MarshalByRefObject, IJobTracker
@@ -239,23 +264,40 @@ namespace JobTracker
 
         public IList<long> GetSplitRange()
         {
+            jobTracker.handleFreeze();
             return jobTracker.GetSplitRange();
         }
 
         public void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            jobTracker.handleFreeze();
             Console.WriteLine("Submit job received from :" + clientURL);
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
+            jobTracker.handleFreeze();
             jobTracker.RegisterWorker(id, url);
         }
 
         public void StatusRequest()
         {
+            jobTracker.handleFreeze();
             jobTracker.StatusRequest();
+        }
+
+        public void Freeze()
+        {
+            jobTracker.handleFreeze();
+            Console.WriteLine("Trying to freeze...");
+            jobTracker.Freeze();
+        }
+
+        public void Unfreeze()
+        {
+            Console.WriteLine("Trying to Unfreeze...");
+           jobTracker.Unfreeze();
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Reflection;
 using System.IO;
 using System.Diagnostics;
 using System.Net;
+using System.Threading;
 
 namespace Worker
 {
@@ -19,6 +20,7 @@ namespace Worker
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
     public delegate void RADRequestJTStatus();
+    public delegate void RADFreezeUnfreezeJT();
 
     class Worker
     {
@@ -26,12 +28,13 @@ namespace Worker
         String clientURL = String.Empty;
         int myId;
         int port;
-
+        bool freeze = false;
+        
 
         static void Main(string[] args)
         {
-            Worker w = new Worker();
 
+            Worker w = new Worker();
             Console.WriteLine(args[0]);
 
             if (args.Length < 2)
@@ -113,7 +116,7 @@ namespace Worker
         }
 
         public void SendResultToClient(IList<KeyValuePair<string, string>> result, int split, string url)
-        {
+        {   
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
@@ -135,8 +138,6 @@ namespace Worker
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
             remoteDel.BeginInvoke(id, url, null, null);
         }
-
-        //TODO: metodo para o servico status a chamar pelo puppet
         public void StatusRequest() 
         {
             Console.WriteLine("Worker " + getId() + " is alive!");
@@ -144,6 +145,52 @@ namespace Worker
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADRequestJTStatus remoteStat = new RADRequestJTStatus(jobTracker.StatusRequest);
             remoteStat.BeginInvoke(null, null);
+        }
+        public void Freeze(bool jt)
+        {
+            //TODO: 
+            //se jt for false manda dormir o worker
+            if (!jt)
+            {
+                freeze = true;
+                Console.WriteLine("Freezing Worker " + getId() + " now");
+            }
+            //se jt for true manda dormir so o jobtracker
+            else
+            {
+                IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+                RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Freeze);
+                remoteFreezeUnfreeze.BeginInvoke(null, null);
+            }
+        }
+
+        public void Unfreeze(bool jt)
+        {
+            //TODO: 
+            //se jt for false manda acordar o worker
+            if (!jt)
+            {
+                freeze = false;
+                Console.WriteLine("Unfreezing Worker " + getId() + " now");
+            }
+            //se jt for true manda acordar o jobtracker
+            else
+            {
+                IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
+                RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Unfreeze);
+                remoteFreezeUnfreeze.BeginInvoke(null, null);
+            }
+        }
+
+        public void handleFreeze()
+        {
+            lock (this)
+            {
+                if (freeze)
+                {
+                    Monitor.Wait(this);
+                }
+            }
         }
     }
 
@@ -162,7 +209,8 @@ namespace Worker
 
         public bool SendMapper(String className, byte[] code)
         {
-            //Console.WriteLine("Received SendMapper");
+
+            worker.handleFreeze();
             Assembly assembly = Assembly.Load(code);
             
             // Walk through each type in the assembly looking for our class
@@ -187,8 +235,10 @@ namespace Worker
         }
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
-        {
-            Console.WriteLine("Task submitted starting on: " + start + " and ending on: " + end);
+        {   
+            worker.handleFreeze();
+            
+            Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
             worker.SetClientURL(clientURL);
 
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
@@ -234,20 +284,36 @@ namespace Worker
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            //Console.WriteLine("Received SubmitJobToTracker");
+
+            worker.handleFreeze();
             worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
-            //Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
+
+            worker.handleFreeze();
             worker.RegisterWorker(id, url);
         }
 
         public void StatusRequest()
         {
+            worker.handleFreeze();
             Console.WriteLine("Trying to get status...");
             worker.StatusRequest();
+        }
+
+        public void Freeze(bool jt)
+        {
+            worker.handleFreeze();
+            Console.WriteLine("Trying to freeze...");
+            worker.Freeze(jt);
+        }
+
+        public void Unfreeze(bool jt)
+        {
+            Console.WriteLine("Trying to Unfreeze...");
+            worker.Unfreeze(jt);
         }
     }
 }
