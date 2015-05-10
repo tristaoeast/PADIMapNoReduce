@@ -14,5 +14,6 @@ namespace PADIMapNoReduceLibs
         void StatusRequest();
         void Freeze();
         void Unfreeze();
+        void ReceiveImAlive(int id);
     }
 }

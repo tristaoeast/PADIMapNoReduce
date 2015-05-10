@@ -12,6 +12,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -86,14 +87,17 @@ namespace UserApplication
             //tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
             tb_UserApp_debug.AppendText("Job from input file: " + inputFile + " and splits: " + splits + " submitted." + Environment.NewLine);
             client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
-            while (!appServices.isJobFinished()) ;
+            while (!appServices.isJobFinished()) {
+                tb_UserApp_debug.AppendText(".");
+                Thread.Sleep(2000);
+            }
 
             tb_UserApp_debug.AppendText("Job finished\r\n");
         }
 
-        public void setJobFinished(bool finisehd)
+        public void setJobFinished(bool finished)
         {
-            jobFinished = finisehd;
+            jobFinished = finished;
         }
 
         //public void createUserApp(int clientPort, String userURL, String cliURL)

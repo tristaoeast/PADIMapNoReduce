@@ -11,6 +11,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace JobTracker
 {
@@ -27,6 +28,8 @@ namespace JobTracker
         bool freeze = false;
 
         int jobsFinished = 0;
+
+        bool jobFinished = true;
 
         Queue<int> unfinishedSplitsQ = new Queue<int>();
         IDictionary<int, long> splitStart = new Dictionary<int, long>();
@@ -70,8 +73,88 @@ namespace JobTracker
             JobTrackerServices jts = new JobTrackerServices(jt);
             RemotingServices.Marshal(jts, "JT", typeof(JobTrackerServices));
 
+            //Check every 20 seconds if workers are alive
+            System.Timers.Timer aTimer = new System.Timers.Timer(20000);
+            // Hook up the Elapsed event for the timer. 
+            aTimer.Elapsed += (sender, e) => CheckWorkersAlive(sender, e, jt);
+            aTimer.Enabled = true;
+
+
             Console.WriteLine("Press any key to exit");
             Console.ReadLine();
+        }
+
+        private static void CheckWorkersAlive(Object source, ElapsedEventArgs e, JobTracker jt)
+        {
+            IDictionary<int, bool> workerAlive = jt.getWorkerAlive();
+            if (!jt.IsJobFinished())
+            {
+                foreach (KeyValuePair<int, bool> kvp in workerAlive)
+                {
+                    if (!workerAlive[kvp.Key])
+                    {
+                        int split = jt.getWorkerCurrentSplit(kvp.Key);
+                        if (split != 0)
+                        {
+                            jt.SetWorkerCurrentSplit(kvp.Key, 0);
+                            long start = jt.getSplitStart(kvp.Key);
+                            long end = jt.getSplitEnd(kvp.Key);
+                            DelegateEnqueueSplit des = jt.EnqueueSplit;
+                            des(split, start, end, kvp.Key);
+                            DelegateOutputMessage dom = jt.dbg;
+                            dom("Worker " + kvp.Value + " unresponsive. Enqueueing split with start and end <" + split + ", " + start + ", " + end + ">");
+                        }
+                    }
+                    else
+                    {
+                        jt.SetWorkerAlive(kvp.Key, false);
+                    }
+                }
+            }
+
+        }
+
+        public bool IsJobFinished()
+        {
+            return jobFinished;
+        }
+
+        public IDictionary<int, bool> getWorkerAlive()
+        {
+            return workerAlive;
+        }
+
+        public void SetWorkerAlive(int id, bool alive) {
+            if (workerAlive.ContainsKey(id))
+                workerAlive.Remove(id);
+            workerAlive.Add(id, alive);
+        }
+
+        public void SetWorkerCurrentSplit(int id, int split) {
+            if (workerCurrentSplit.ContainsKey(id))
+                workerCurrentSplit.Remove(id);
+            workerCurrentSplit.Add(id, split);
+        }
+
+        public int getWorkerCurrentSplit(int id)
+        {
+            if (workerCurrentSplit.ContainsKey(id))
+                return workerCurrentSplit[id];
+            return 0;
+        }
+
+        public long getSplitStart(int id)
+        {
+            if (splitStart.ContainsKey(id))
+                return splitStart[id];
+            return 0;
+        }
+
+        public long getSplitEnd(int id)
+        {
+            if (splitEnd.ContainsKey(id))
+                return splitEnd[id];
+            return 0;
         }
 
         public void dbg(string s)
@@ -132,6 +215,7 @@ namespace JobTracker
 
         public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            jobFinished = false;
             decimal sizeSplit = fileSize / splits;
             finalSizeSplit = (long)System.Math.Round(sizeSplit);
             this.clientURL = clientURL;
@@ -149,12 +233,13 @@ namespace JobTracker
                 //    sentSplits++;
                 //    break;
                 //}
-                //splitStart.Remove(sentSplits + 1);
-                //splitStart.Add(sentSplits + 1, sentBytes);
-                //splitEnd.Remove(sentSplits + 1);
-                //splitEnd.Add(sentSplits + 1, sentBytes + finalSizeSplit);
+
                 if (mapSent)
                 {
+                    splitStart.Remove(sentSplits + 1);
+                    splitStart.Add(sentSplits + 1, sentBytes);
+                    splitEnd.Remove(sentSplits + 1);
+                    splitEnd.Add(sentSplits + 1, sentBytes + finalSizeSplit);
                     SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
                     sentSplits++;
                     sentBytes += finalSizeSplit + 1;
@@ -172,6 +257,9 @@ namespace JobTracker
             AsyncCallback asyncCallback = new AsyncCallback(this.SJTWCallBack);
             JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
             Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
+            if (workerCurrentSplit.ContainsKey(idWorker))
+                workerCurrentSplit.Remove(idWorker);
+            workerCurrentSplit.Add(idWorker, split);
             remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, new object[] { split, start, end, idWorker });
 
         }
@@ -204,6 +292,7 @@ namespace JobTracker
                 jobsFinished++;
                 if (jobsFinished == nSplits)
                 {
+                    jobFinished = true;
                     Console.WriteLine("Sending job finished signal to client:" + clientURL);
                     IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
                     client.notifyJobFinished(true);
@@ -273,6 +362,7 @@ namespace JobTracker
         public void RegisterWorker(int id, string url)
         {
             Console.WriteLine("Registering worker with ID: " + id + "and URL: " + url);
+            workerAlive.Add(id, true);
             workersRegistry.Add(id, url);
         }
 
@@ -385,6 +475,11 @@ namespace JobTracker
         {
             Console.WriteLine("Trying to Unfreeze...");
             jobTracker.Unfreeze();
+        }
+
+        public void ReceiveImAlive(int id)
+        {
+            jobTracker.SetWorkerAlive(id, true);
         }
     }
 }

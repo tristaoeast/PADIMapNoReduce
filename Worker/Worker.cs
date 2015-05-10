@@ -12,6 +12,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Net;
 using System.Threading;
+using System.Timers;
 
 namespace Worker
 {
@@ -81,8 +82,19 @@ namespace Worker
             Console.WriteLine("Sending registration to: " + entryURL);
             remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0]+ "/W", null, null);
 
+            //Send im alive to job tracker every 10 seconds
+            System.Timers.Timer aTimer = new System.Timers.Timer(10000);
+            // Hook up the Elapsed event for the timer. 
+            aTimer.Elapsed += (sender, e) => ImAlive(sender, e, w);
+            aTimer.Enabled = true;
+
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + " and URL: " + args[1] + "...");
             System.Console.ReadLine();
+        }
+
+        private static void ImAlive(Object source, ElapsedEventArgs e, Worker w) {
+            IJobTracker jt = (IJobTracker)Activator.GetObject(typeof(IJobTracker), w.GetJobTrackerURL());
+            jt.ReceiveImAlive(w.getId());
         }
 
         public void setPort(int p)
