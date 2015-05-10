@@ -37,8 +37,10 @@ namespace JobTracker
 
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
-        public delegate void RADSendMapper(String className, byte[] code);
+        public delegate bool RADSendMapper(String className, byte[] code);
         public delegate void DelegateWorkToWorker(int id);
+        public delegate void DelegateEnqueueSplit(int split, long start, long end, int idWorker);
+        public delegate void DelegateOutputMessage(string msg);
 
         static void Main(string[] args)
         {
@@ -71,10 +73,16 @@ namespace JobTracker
             Console.ReadLine();
         }
 
+        public void dbg(string s)
+        {
+            Console.WriteLine(s);
+        }
+
         public void SetJobTrackerURL(string url)
         {
             jtURL = url;
         }
+
         public IList<long> GetSplitRange()
         {
             IList<long> splitsRange = new List<long>();
@@ -83,12 +91,25 @@ namespace JobTracker
             return splitsRange;
         }
 
+        public void EnqueueSplit(int split, long start, long end, int idWorker)
+        {
+            splitStart.Remove(split);
+            splitStart.Add(split, start);
+            splitEnd.Remove(split);
+            splitEnd.Add(split, end);
+            unfinishedSplitsQ.Enqueue(split);
+            workerAlive.Remove(idWorker);
+            workerAlive.Add(idWorker, false);
+        }
+
         public bool SendMapper(String className, byte[] code, String workerURL, long start, long end, int split, int idWorker)
         {
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), workerURL);
 
             try
             {
+                //RADSendMapper remDel = new RADSendMapper(worker.SendMapper);
+                //remDel.BeginInvoke(className, code, null, null);
                 worker.SendMapper(className, code);
                 Console.WriteLine("Sending mapper with name: " + className + " to worker: " + workerURL);
                 return true;
@@ -137,19 +158,6 @@ namespace JobTracker
                     sentBytes += finalSizeSplit + 1;
                 }
             }
-
-            //ver o número de workers disponíveis e para cara enviar o um split
-            //ex
-            //int nWorkers = 2;
-
-            ////TALVEZ VERIFICAR ANTES SE EXISTEM MENOS WORKER QUE SPLITS!!
-            //for (int i = 0; i < nWorkers; i++)
-            //{
-            //    //enviar 1 split a cada worker
-            //    SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, i);
-            //    sentSplits++;
-            //    sentBytes += finalSizeSplit + 1;
-            //}
         }
 
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
@@ -172,43 +180,56 @@ namespace JobTracker
             }
             else
             {
-                workerAlive.Add(idWorker, true);
-                AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
+                AsyncCallback asyncCallback = new AsyncCallback(this.SJTWCallBack);
                 JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
                 Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
-                remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, null);
+                remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, new object[] { split, start, end, idWorker });
             }
         }
 
-        private void CallBack(IAsyncResult ar)
+        private void SJTWCallBack(IAsyncResult ar)
         {
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
-            int id = (int)rad.EndInvoke(ar);
-            Console.WriteLine("Worker with ID: " + id + "finished his split.");
-            workerAlive.Remove(id);
-            workerAlive.Add(id, true);
-            DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
-            delegateWorkToWorker(id);
-            jobsFinished++;
-            if (jobsFinished == nSplits)
+
+            try
             {
-                Console.WriteLine("Sending job finished signal to client:" + clientURL);
-                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
-                client.notifyJobFinished(true);
-                Console.WriteLine("Job finished signal sent");
+                int id = (int)rad.EndInvoke(ar);
+                Console.WriteLine("Worker with ID: " + id + "finished his split.");
+                workerAlive.Remove(id);
+                workerAlive.Add(id, true);
+                DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
+                delegateWorkToWorker(id);
+                jobsFinished++;
+                if (jobsFinished == nSplits)
+                {
+                    Console.WriteLine("Sending job finished signal to client:" + clientURL);
+                    IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+                    client.notifyJobFinished(true);
+                    Console.WriteLine("Job finished signal sent");
+                }
+                //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
             }
-            //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
+
+            catch (Exception)
+            {
+                object[] state = (object[])ar.AsyncState;
+                int split = (int)state[0];
+                long start = (long)state[1];
+                long end = (long)state[2];
+                int idWorker = (int)state[3];
+                DelegateEnqueueSplit des = this.EnqueueSplit;
+                des(split, start, end, idWorker);
+                DelegateOutputMessage dom = this.dbg;
+                dom("Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split " + split + " with start " + start + " and end " + end);
+                return;
+            }
         }
 
         private void ManageWorkToWorker(int id)
         {
             Console.WriteLine("sentSplits: " + sentSplits + " nSplits: " + nSplits);
-            if (sentSplits >= nSplits)
-            {
-                Console.WriteLine("ENTREI222");
-                //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
-            }//TODO: verify queue for unresolved messages... CHECK
-            else if (unfinishedSplitsQ.Count > 0)
+
+            if (unfinishedSplitsQ.Count > 0)
             {
                 int split = unfinishedSplitsQ.Dequeue();
                 Console.WriteLine("There's a job queued. It is split number: " + split);
@@ -217,6 +238,11 @@ namespace JobTracker
                 Console.WriteLine("Submitting queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
                 SubmitJobToWorker(start, end, split, this.clientURL, id);
             }
+            else if (sentSplits >= nSplits)
+            {
+                Console.WriteLine("ENTREI222");
+                //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
+            }//TODO: verify queue for unresolved messages... CHECK
             else
             {
                 long end = sentBytes + finalSizeSplit;
