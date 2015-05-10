@@ -84,7 +84,7 @@ namespace UserApplication
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             //tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
             //tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
-            tb_UserApp_debug.AppendText("Job from input file: " + inputFile + " and splits: " + splits + " submitted.");
+            tb_UserApp_debug.AppendText("Job from input file: " + inputFile + " and splits: " + splits + " submitted." + Environment.NewLine);
             client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
             while (!appServices.isJobFinished()) ;
 

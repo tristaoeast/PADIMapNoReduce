@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -116,12 +117,13 @@ namespace JobTracker
             }
             catch (Exception)
             {
-                splitStart.Remove(split);
-                splitStart.Add(split, start);
-                splitEnd.Remove(split);
-                splitEnd.Add(split, end);
-                Console.WriteLine("Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split {0} with start {1} and end {2}", split, start, end);
-                unfinishedSplitsQ.Enqueue(split);
+                //splitStart.Remove(split);
+                //splitStart.Add(split, start);
+                //splitEnd.Remove(split);
+                //splitEnd.Add(split, end);
+                //Console.WriteLine("SEND MAPPER: Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split {0} with start {1} and end {2}", split, start, end);
+                Console.WriteLine("SEND MAPPER: Could not locate worker at: " + workersRegistry[idWorker]);
+                //unfinishedSplitsQ.Enqueue(split);
                 workerAlive.Remove(idWorker);
                 workerAlive.Add(idWorker, false);
                 return false;
@@ -157,40 +159,40 @@ namespace JobTracker
                     sentSplits++;
                     sentBytes += finalSizeSplit + 1;
                 }
+
             }
         }
 
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
         {
-            splitStart.Remove(split);
-            splitStart.Add(split, start);
-            splitEnd.Remove(split);
-            splitEnd.Add(split, end);
+
             //conforme o id ir ver qual o URL desse worker e meter aqui em baixo!!!!!
             IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), workersRegistry[idWorker]);
 
-            if (workerAlive.ContainsKey(idWorker))
-                workerAlive.Remove(idWorker);
+            AsyncCallback asyncCallback = new AsyncCallback(this.SJTWCallBack);
+            JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
+            Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
+            remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, new object[] { split, start, end, idWorker });
 
-            if (newWorker == null)
-            {
-                Console.WriteLine("Could not locate worker at: " + workersRegistry[idWorker]);
-                unfinishedSplitsQ.Enqueue(split);
-                workerAlive.Add(idWorker, false);
-            }
-            else
-            {
-                AsyncCallback asyncCallback = new AsyncCallback(this.SJTWCallBack);
-                JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
-                Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
-                remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, new object[] { split, start, end, idWorker });
-            }
         }
 
         private void SJTWCallBack(IAsyncResult ar)
         {
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
-
+            //int id = (int)rad.EndInvoke(ar);
+            //Console.WriteLine("Worker with ID: " + id + "finished his split.");
+            //workerAlive.Remove(id);
+            //workerAlive.Add(id, true);
+            //DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
+            //delegateWorkToWorker(id);
+            //jobsFinished++;
+            //if (jobsFinished == nSplits)
+            //{
+            //    Console.WriteLine("Sending job finished signal to client:" + clientURL);
+            //    IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+            //    client.notifyJobFinished(true);
+            //    Console.WriteLine("Job finished signal sent");
+            //}
             try
             {
                 int id = (int)rad.EndInvoke(ar);
@@ -209,8 +211,7 @@ namespace JobTracker
                 }
                 //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
             }
-
-            catch (Exception)
+            catch (SocketException)
             {
                 object[] state = (object[])ar.AsyncState;
                 int split = (int)state[0];
@@ -220,7 +221,7 @@ namespace JobTracker
                 DelegateEnqueueSplit des = this.EnqueueSplit;
                 des(split, start, end, idWorker);
                 DelegateOutputMessage dom = this.dbg;
-                dom("Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split " + split + " with start " + start + " and end " + end);
+                dom("SJTW CALL BACK: Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split " + split + " with start " + start + " and end " + end);
                 return;
             }
         }

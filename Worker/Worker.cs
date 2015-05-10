@@ -240,18 +240,24 @@ namespace Worker
             
             Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
             worker.SetClientURL(clientURL);
-
+            Console.WriteLine("1");
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
-
+            Console.WriteLine("2");
             // Client URL must be something like "tcp://localhost:10001/C"
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+            Console.WriteLine("3");
             byte[] fileSplitByte = client.GetSplit(start, end);
+            Console.WriteLine("4");
             String filePath = split.ToString() + ".in";
+            Console.WriteLine("5");
             File.WriteAllBytes(filePath, fileSplitByte);
+            Console.WriteLine("6");
 
             // Read each line from the string
             System.IO.StreamReader file = new System.IO.StreamReader(filePath);
+            Console.WriteLine("7");
             string line;
+            Console.WriteLine("8");
             while (mapObject == null)
             {
                 Console.WriteLine("Waiting for map Object...");

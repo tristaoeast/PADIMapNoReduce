@@ -3,4 +3,4 @@ WORKER 2 tcp://localhost:20001/PM tcp://localhost:30002/W tcp://localhost:30001/
 WORKER 3 tcp://localhost:20001/PM tcp://localhost:30003/W tcp://localhost:30001/W
 % WORKER 4 tcp://localhost:20001/PM tcp://localhost:30004/W tcp://localhost:30001/W
 WAIT 15
-SUBMIT tcp://localhost:30001/W pl10.txt result 12 CharCountMapper ./LibMapperCharCount.dll
+SUBMIT tcp://localhost:30001/W pl10.txt result 8 CharCountMapper ./LibMapperCharCount.dll
