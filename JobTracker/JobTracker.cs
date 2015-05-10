@@ -37,6 +37,7 @@ namespace JobTracker
 
 
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
+        public delegate void RADSendMapper(String className, byte[] code);
         public delegate void DelegateWorkToWorker(int id);
 
         static void Main(string[] args)
@@ -84,12 +85,12 @@ namespace JobTracker
 
         public bool SendMapper(String className, byte[] code, String workerURL, long start, long end, int split, int idWorker)
         {
-            Console.WriteLine("Sending mapper with name: " + className + " to worker: " + workerURL);
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), workerURL);
 
             try
             {
                 worker.SendMapper(className, code);
+                Console.WriteLine("Sending mapper with name: " + className + " to worker: " + workerURL);
                 return true;
             }
             catch (Exception)
@@ -184,6 +185,8 @@ namespace JobTracker
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
             int id = (int)rad.EndInvoke(ar);
             Console.WriteLine("Worker with ID: " + id + "finished his split.");
+            workerAlive.Remove(id);
+            workerAlive.Add(id, true);
             DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
             delegateWorkToWorker(id);
             jobsFinished++;
@@ -204,8 +207,7 @@ namespace JobTracker
             {
                 Console.WriteLine("ENTREI222");
                 //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
-                //afinal já não deve ser preciso para para já fica aqui :)
-            }//TODO: verify queue for unresolved messages...
+            }//TODO: verify queue for unresolved messages... CHECK
             else if (unfinishedSplitsQ.Count > 0)
             {
                 int split = unfinishedSplitsQ.Dequeue();
@@ -213,7 +215,6 @@ namespace JobTracker
                 long start = splitStart[split];
                 long end = splitEnd[split];
                 Console.WriteLine("Submitting queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
-
                 SubmitJobToWorker(start, end, split, this.clientURL, id);
             }
             else
