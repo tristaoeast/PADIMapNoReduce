@@ -27,6 +27,15 @@ namespace JobTracker
 
         int jobsFinished = 0;
 
+        Queue<int> unfinishedSplitsQ = new Queue<int>();
+        IDictionary<int, long> splitStart = new Dictionary<int, long>();
+        IDictionary<int, long> splitEnd = new Dictionary<int, long>();
+        IDictionary<int, int> workerCurrentSplit = new Dictionary<int, int>();
+        IDictionary<int, bool> workerAlive = new Dictionary<int, bool>();
+        //IDictionary<int, bool> workerOnline = new Dictionary<int, bool>();
+
+
+
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
         public delegate void DelegateWorkToWorker(int id);
 
@@ -73,11 +82,28 @@ namespace JobTracker
             return splitsRange;
         }
 
-        public void SendMapper(String className, byte[] code, String workerURL)
+        public bool SendMapper(String className, byte[] code, String workerURL, long start, long end, int split, int idWorker)
         {
             Console.WriteLine("Sending mapper with name: " + className + " to worker: " + workerURL);
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), workerURL);
-            worker.SendMapper(className, code);
+
+            try
+            {
+                worker.SendMapper(className, code);
+                return true;
+            }
+            catch (Exception)
+            {
+                splitStart.Remove(split);
+                splitStart.Add(split, start);
+                splitEnd.Remove(split);
+                splitEnd.Add(split, end);
+                Console.WriteLine("Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split {0} with start {1} and end {2}", split, start, end);
+                unfinishedSplitsQ.Enqueue(split);
+                workerAlive.Remove(idWorker);
+                workerAlive.Add(idWorker, false);
+                return false;
+            }
         }
 
         public void NewSubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
@@ -92,17 +118,23 @@ namespace JobTracker
 
             foreach (KeyValuePair<int, string> kvp in workersRegistry)
             {
-                SendMapper(className, code, kvp.Value);
+                bool mapSent = SendMapper(className, code, kvp.Value, sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, kvp.Key);
                 //if (sentSplits + 1 == nSplits)
                 //{
                 //    SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit * 10, sentSplits + 1, clientURL, kvp.Key);
                 //    sentSplits++;
                 //    break;
                 //}
-
-                SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
-                sentSplits++;
-                sentBytes += finalSizeSplit + 1;
+                //splitStart.Remove(sentSplits + 1);
+                //splitStart.Add(sentSplits + 1, sentBytes);
+                //splitEnd.Remove(sentSplits + 1);
+                //splitEnd.Add(sentSplits + 1, sentBytes + finalSizeSplit);
+                if (mapSent)
+                {
+                    SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
+                    sentSplits++;
+                    sentBytes += finalSizeSplit + 1;
+                }
             }
 
             //ver o número de workers disponíveis e para cara enviar o um split
@@ -121,13 +153,30 @@ namespace JobTracker
 
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
         {
+            splitStart.Remove(split);
+            splitStart.Add(split, start);
+            splitEnd.Remove(split);
+            splitEnd.Add(split, end);
             //conforme o id ir ver qual o URL desse worker e meter aqui em baixo!!!!!
             IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), workersRegistry[idWorker]);
 
-            AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
-            JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
-            Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
-            remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, null);
+            if (workerAlive.ContainsKey(idWorker))
+                workerAlive.Remove(idWorker);
+
+            if (newWorker == null)
+            {
+                Console.WriteLine("Could not locate worker at: " + workersRegistry[idWorker]);
+                unfinishedSplitsQ.Enqueue(split);
+                workerAlive.Add(idWorker, false);
+            }
+            else
+            {
+                workerAlive.Add(idWorker, true);
+                AsyncCallback asyncCallback = new AsyncCallback(this.CallBack);
+                JobTracker.RemoteAsyncDelegateSubmitJobToWorker remoteDel = new JobTracker.RemoteAsyncDelegateSubmitJobToWorker(newWorker.SubmitJobToWorker);
+                Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
+                remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, null);
+            }
         }
 
         private void CallBack(IAsyncResult ar)
@@ -156,18 +205,28 @@ namespace JobTracker
                 Console.WriteLine("ENTREI222");
                 //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
                 //afinal já não deve ser preciso para para já fica aqui :)
+            }//TODO: verify queue for unresolved messages...
+            else if (unfinishedSplitsQ.Count > 0)
+            {
+                int split = unfinishedSplitsQ.Dequeue();
+                Console.WriteLine("There's a job queued. It is split number: " + split);
+                long start = splitStart[split];
+                long end = splitEnd[split];
+                Console.WriteLine("Submitting queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
+
+                SubmitJobToWorker(start, end, split, this.clientURL, id);
             }
             else
             {
                 long end = sentBytes + finalSizeSplit;
-                Console.WriteLine("sentBytes: " + sentBytes + " splitSize: " + finalSizeSplit + "          end: " + end + " fileSize: " + fileSize + Environment.NewLine);
+                //Console.WriteLine("sentBytes: " + sentBytes + " splitSize: " + finalSizeSplit + "          end: " + end + " fileSize: " + fileSize + Environment.NewLine);
                 if (end >= fileSize)
                 {
                     //end += finalSizeSplit * 10;
                     //SubmitJobToWorker(sentBytes, end, sentSplits + 1, this.clientURL, id);
                     //long newEnd = (fileSize - sentBytes) + sentBytes;
                     //os bytes foram todos enviados! logo
-                    Console.WriteLine("11111 Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + end + ">" + Environment.NewLine);
+                    Console.WriteLine("Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + end + ">" + Environment.NewLine);
                     SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, this.clientURL, id);
                     sentBytes = fileSize;
                     sentSplits++;
@@ -175,7 +234,7 @@ namespace JobTracker
                 }
                 else
                 {
-                    Console.WriteLine("22222 Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + end + ">" + Environment.NewLine);
+                    Console.WriteLine("Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + end + ">" + Environment.NewLine);
                     SubmitJobToWorker(sentBytes, end, sentSplits + 1, this.clientURL, id);
                     sentBytes += finalSizeSplit + 1;
                     sentSplits++;
@@ -297,7 +356,7 @@ namespace JobTracker
         public void Unfreeze()
         {
             Console.WriteLine("Trying to Unfreeze...");
-           jobTracker.Unfreeze();
+            jobTracker.Unfreeze();
         }
     }
 }
