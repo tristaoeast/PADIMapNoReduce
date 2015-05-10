@@ -172,7 +172,6 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            handleFreeze();
             Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!");
         }
 
@@ -223,7 +222,7 @@ namespace JobTracker
             freeze = false;
         }
 
-        private void handleFreeze()
+        public void handleFreeze()
         {
             lock (this)
             {
@@ -246,27 +245,32 @@ namespace JobTracker
 
         public IList<long> GetSplitRange()
         {
+            jobTracker.handleFreeze();
             return jobTracker.GetSplitRange();
         }
 
         public void SubmitJob(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            jobTracker.handleFreeze();
             Console.WriteLine("Submit job received from :" + clientURL);
             jobTracker.NewSubmitJob(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
+            jobTracker.handleFreeze();
             jobTracker.RegisterWorker(id, url);
         }
 
         public void StatusRequest()
         {
+            jobTracker.handleFreeze();
             jobTracker.StatusRequest();
         }
 
         public void Freeze()
         {
+            jobTracker.handleFreeze();
             Console.WriteLine("Trying to freeze...");
             jobTracker.Freeze();
         }

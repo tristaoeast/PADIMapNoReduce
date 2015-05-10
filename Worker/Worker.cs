@@ -116,7 +116,7 @@ namespace Worker
         }
 
         public void SendResultToClient(IList<KeyValuePair<string, string>> result, int split, string url)
-        {
+        {   
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
@@ -140,7 +140,6 @@ namespace Worker
         }
         public void StatusRequest() 
         {
-            handleFreeze();
             Console.WriteLine("Worker " + getId() + " is alive!");
             //request jobtracker status
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
@@ -183,7 +182,7 @@ namespace Worker
             }
         }
 
-        private void handleFreeze()
+        public void handleFreeze()
         {
             lock (this)
             {
@@ -210,6 +209,7 @@ namespace Worker
 
         public bool SendMapper(String className, byte[] code)
         {
+            worker.handleFreeze();
             Console.WriteLine("Received SendMapper");
             Assembly assembly = Assembly.Load(code);
             
@@ -235,7 +235,9 @@ namespace Worker
         }
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
-        {
+        {   
+            worker.handleFreeze();
+            
             Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
             worker.SetClientURL(clientURL);
 
@@ -283,24 +285,28 @@ namespace Worker
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
+            worker.handleFreeze();
             Console.WriteLine("Received SubmitJobToTracker");
             worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
+            worker.handleFreeze();
             Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
             worker.RegisterWorker(id, url);
         }
 
         public void StatusRequest()
         {
+            worker.handleFreeze();
             Console.WriteLine("Trying to get status...");
             worker.StatusRequest();
         }
 
         public void Freeze(bool jt)
         {
+            worker.handleFreeze();
             Console.WriteLine("Trying to freeze...");
             worker.Freeze(jt);
         }
