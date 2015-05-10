@@ -162,13 +162,13 @@ namespace Worker
 
         public bool SendMapper(String className, byte[] code)
         {
-            Console.WriteLine("Received SendMapper");
+            //Console.WriteLine("Received SendMapper");
             Assembly assembly = Assembly.Load(code);
             
             // Walk through each type in the assembly looking for our class
             foreach (Type type in assembly.GetTypes())
             {
-                Console.WriteLine("Type: " + type.FullName);
+                //Console.WriteLine("Type: " + type.FullName);
                 if (type.IsClass == true)
                 {
                     if (type.FullName.EndsWith("." + className))
@@ -188,7 +188,7 @@ namespace Worker
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
         {
-            Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
+            Console.WriteLine("Task submitted starting on: " + start + " and ending on: " + end);
             worker.SetClientURL(clientURL);
 
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
@@ -220,28 +220,27 @@ namespace Worker
                     result.Add(kvp);
                 }
             }
-            using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
-            {
-                foreach (var l in result)
-                {
-                    outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
-                }
-            }
-            Console.WriteLine("Sending result of split: " + split + " to client: " + clientURL);
+            //using (System.IO.StreamWriter outFile = new System.IO.StreamWriter(split.ToString() + ".out"))
+            //{
+            //    foreach (var l in result)
+            //    {
+            //        outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
+            //    }
+            //}
             worker.SendResultToClient(result, split, clientURL);
-            Console.WriteLine("Result sent");
+            Console.WriteLine("Result of split: " + split + " to client: " + clientURL + " sent.");
             return worker.getId();
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            Console.WriteLine("Received SubmitJobToTracker");
+            //Console.WriteLine("Received SubmitJobToTracker");
             worker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
         }
 
         public void RegisterWorker(int id, string url)
         {
-            Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
+            //Console.WriteLine("Trying to register worker with id: " + id + " and url: " + url);
             worker.RegisterWorker(id, url);
         }
 

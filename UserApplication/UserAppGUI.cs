@@ -29,6 +29,10 @@ namespace UserApplication
         String userAppURL;
         String clientURL;
 
+        bool jobFinished = false;
+
+        UserAppServices appServices;
+
         public UserAppGUI()
         {
             InitializeComponent();
@@ -40,10 +44,10 @@ namespace UserApplication
             {
                 tb_UserApp_debug.AppendText("ERROR: Wrong number of arguments. Expected format: USERAPP <USER-PORT [400001-49999]> <USERAPP-URL> <CLIENT-PORT> <CLIENT-URL>");
                 tb_UserApp_debug.AppendText("Please close application");
-                while (true);
+                while (true) ;
             }
 
-            clientURL = "tcp://" + Dns.GetHostName() + ":"+ args[3] + "/C";
+            clientURL = "tcp://" + Dns.GetHostName() + ":" + args[3] + "/C";
             userAppURL = args[2];
             userPort = Int32.Parse(args[1]);
             clientPort = Int32.Parse(args[3]);
@@ -52,7 +56,7 @@ namespace UserApplication
             ChannelServices.RegisterChannel(chan, true);
 
             //Activation
-            UserAppServices appServices = new UserAppServices(this);
+            appServices = new UserAppServices(this);
             RemotingServices.Marshal(appServices, "U", typeof(UserAppServices));
             tb_UserApp_debug.AppendText("UserApp Service Started on port: " + userPort + Environment.NewLine);
         }
@@ -78,10 +82,18 @@ namespace UserApplication
         public void Submit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryUrl)
         {
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
-            tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
-            tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
+            //tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
+            //tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
+            tb_UserApp_debug.AppendText("Job from input file: " + inputFile + " and splits: " + splits + " submitted.");
             client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
+            while (!appServices.isJobFinished()) ;
+
             tb_UserApp_debug.AppendText("Job finished\r\n");
+        }
+
+        public void setJobFinished(bool finisehd)
+        {
+            jobFinished = finisehd;
         }
 
         //public void createUserApp(int clientPort, String userURL, String cliURL)
@@ -121,20 +133,33 @@ namespace UserApplication
 
     delegate void DelInit(String entryUrl);
     delegate void DelSubmit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryURL);
+    delegate void DelJobFinished(bool finished);
 
     public class UserAppServices : MarshalByRefObject, IApp
     {
         public static UserAppGUI form;
+        bool jobFinished = false;
 
         public UserAppServices(UserAppGUI f)
         {
             form = f;
         }
 
+        public bool isJobFinished()
+        {
+            return jobFinished;
+        }
+
+
         public void Submit(String entryUrl, String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
             form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code, entryUrl });
+        }
+
+        public void notifyJobFinished(bool finished)
+        {
+            jobFinished = finished;
         }
     }
 

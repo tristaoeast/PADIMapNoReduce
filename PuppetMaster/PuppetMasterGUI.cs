@@ -218,11 +218,18 @@ namespace PuppetMaster
         public void loadScript(string scriptPath)
         {
             String line;
-
-            System.IO.StreamReader file = new System.IO.StreamReader(scriptPath);
+            System.IO.StreamReader file;
+            try
+            {
+                file = new System.IO.StreamReader(scriptPath);
+            }
+            catch (FileNotFoundException)
+            {
+                this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: The following script was not found: " + scriptPath });
+                return;
+            }
             while ((line = file.ReadLine()) != null)
             {
-                //dbg("Script line being processed: " + line + Environment.NewLine);
                 processCommand(line);
             }
         }

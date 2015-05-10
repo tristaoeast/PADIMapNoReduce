@@ -23,6 +23,8 @@ namespace JobTracker
         String clientURL;
         String jtURL;
 
+        int jobsFinished = 0;
+
         public delegate int RemoteAsyncDelegateSubmitJobToWorker(long start, long end, int split, String clientURL);
         public delegate void DelegateWorkToWorker(int id);
 
@@ -89,6 +91,13 @@ namespace JobTracker
             foreach (KeyValuePair<int, string> kvp in workersRegistry)
             {
                 SendMapper(className, code, kvp.Value);
+                //if (sentSplits + 1 == nSplits)
+                //{
+                //    SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit * 10, sentSplits + 1, clientURL, kvp.Key);
+                //    sentSplits++;
+                //    break;
+                //}
+
                 SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
                 sentSplits++;
                 sentBytes += finalSizeSplit + 1;
@@ -126,12 +135,20 @@ namespace JobTracker
             Console.WriteLine("Worker with ID: " + id + "finished his split.");
             DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
             delegateWorkToWorker(id);
+            jobsFinished++;
+            if (jobsFinished == nSplits)
+            {
+                Console.WriteLine("Sending job finished signal to client:" + clientURL);
+                IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
+                client.notifyJobFinished(true);
+                Console.WriteLine("Job finished signal sent");
+            }
             //this.Invoke(new DelegateWorkToWorker(this.ManageWorkToWorker), new object[] { id });
         }
 
         private void ManageWorkToWorker(int id)
         {
-            //Console.WriteLine("sentSplits: " + sentSplits + " nSplits: " + nSplits);
+            Console.WriteLine("sentSplits: " + sentSplits + " nSplits: " + nSplits);
             if (sentSplits >= nSplits)
             {
                 Console.WriteLine("ENTREI222");
@@ -142,11 +159,13 @@ namespace JobTracker
             {
                 long end = sentBytes + finalSizeSplit;
                 Console.WriteLine("sentBytes: " + sentBytes + " splitSize: " + finalSizeSplit + "          end: " + end + " fileSize: " + fileSize + Environment.NewLine);
-                if (end > fileSize)
+                if (end >= fileSize)
                 {
+                    //end += finalSizeSplit * 10;
+                    //SubmitJobToWorker(sentBytes, end, sentSplits + 1, this.clientURL, id);
                     //long newEnd = (fileSize - sentBytes) + sentBytes;
                     //os bytes foram todos enviados! logo
-                    Console.WriteLine("11111 Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + fileSize + ">" + Environment.NewLine);
+                    Console.WriteLine("11111 Submitting new split to worker with start and end <" + id + ", " + sentBytes + ", " + end + ">" + Environment.NewLine);
                     SubmitJobToWorker(sentBytes, fileSize, sentSplits + 1, this.clientURL, id);
                     sentBytes = fileSize;
                     sentSplits++;

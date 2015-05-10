@@ -12,5 +12,6 @@ namespace PADIMapNoReduceLibs
         void Init(String entryUrl);
         byte[] GetSplit(long start, long end);
         void ReturnResult(IList<KeyValuePair<string, string>> result, int split);
+        void notifyJobFinished(bool finished);
     }
 }

@@ -25,6 +25,7 @@ namespace Client
         String clientURL;
         String userAppURL;
 
+
         static void Main(string[] args)
         {
             if (args.Length < 3)
@@ -38,6 +39,7 @@ namespace Client
             Client cli = new Client();
             cli.setClientURL("tcp://" + Dns.GetHostName() + ":" + args[0] + "/C");
             //cli.setClientURL(args[3]);
+            cli.setUserAppURL(args[1]);
 
             TcpChannel chan = new TcpChannel(Int32.Parse(args[0]));
             ChannelServices.RegisterChannel(chan, true);
@@ -71,6 +73,16 @@ namespace Client
             return clientURL;
         }
 
+        public void setUserAppURL(string url)
+        {
+            userAppURL = url;
+        }
+
+        public string getUserAppURL()
+        {
+            return userAppURL;
+        }
+
         public String GetOutputDir()
         {
             return outputFile;
@@ -83,7 +95,7 @@ namespace Client
 
         public void SubmitJob(long fileSize, int splits, string className, byte[] code)
         {
-            Console.WriteLine("Submitting job to tracker at: " + entryUrl + " from client: "+ clientURL);
+            Console.WriteLine("Submitting job to tracker at: " + entryUrl + " from client: " + clientURL);
             IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), entryUrl);
             //newWorker.SubmitJobToTracker(fileSize, splits, className, code, clientURL);
             RADSubmitJob remoteDel = new RADSubmitJob(worker.SubmitJobToTracker);
@@ -98,25 +110,34 @@ namespace Client
             bool exitWhile = false;
             long byteCounter = 0;
             String result = String.Empty;
+
+            FileInfo f = new FileInfo(inputFile);
+            long fSize = f.Length;
             while (!stream.EndOfStream)
             {
                 String line = stream.ReadLine();
-                byteCounter += line.Length + System.Environment.NewLine.Length;
+                //byteCounter += line.Length + System.Environment.NewLine.Length;
+                byteCounter += line.Length;
                 if (byteCounter >= start + 1)
                 {
                     while (byteCounter <= end + 1)
                     {
+                        //result += line + System.Environment.NewLine;
                         result += line + System.Environment.NewLine;
                         //Read next line
-                        if (!stream.EndOfStream)
+                        if (!stream.EndOfStream && (byteCounter <= fSize))
                         {
                             line = stream.ReadLine();
-                            byteCounter += line.Length + System.Environment.NewLine.Length;
+                            //byteCounter += line.Length + System.Environment.NewLine.Length;
+                            byteCounter += line.Length;
                         }
                         else
-                            byteCounter = end + 10;
+                        {
+                            break;
+                        }
                     }
                     exitWhile = true;
+                    break;
                 }
                 if (exitWhile) break;
             }
@@ -147,9 +168,9 @@ namespace Client
 
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
+            client.dbg("New Job submitted to JobTracker at " + entryURL);
             client.SubmitJob(fileSize, splits, className, code);
-            client.dbg("New Job submitted to JobTracker at" + entryURL);
-
+            
         }
 
         public byte[] GetSplit(long start, long end)
@@ -166,7 +187,7 @@ namespace Client
             String outDir = client.GetOutputDir();
             //TODO: make a new thread to write result to file
             Console.WriteLine("Got result from mapping of split: " + split);
-            String outFile = outDir + "\\" +  split.ToString() + ".out";
+            String outFile = outDir + "\\" + split.ToString() + ".out";
             Console.WriteLine("Writing to file: " + outFile);
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(outFile))
             {
@@ -175,6 +196,14 @@ namespace Client
                     file.WriteLine("<" + line.Key + ", " + line.Value + ">");
                 }
             }
+        }
+
+        public void notifyJobFinished(bool finished)
+        {
+            Console.WriteLine("Sending job finished signal to user app:" + client.getUserAppURL());
+            IApp app = (IApp)Activator.GetObject(typeof(IApp), client.getUserAppURL());
+            app.notifyJobFinished(true);
+            Console.WriteLine("Job finished signal sent to user app");
         }
     }
 }

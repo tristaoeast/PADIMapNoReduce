@@ -1,0 +1,5 @@
+WORKER 1 tcp://localhost:20001/PM tcp://localhost:30001/W
+WORKER 2 tcp://localhost:20001/PM tcp://localhost:30002/W tcp://localhost:30001/W
+WORKER 3 tcp://localhost:20001/PM tcp://localhost:30003/W tcp://localhost:30001/W
+WORKER 4 tcp://localhost:20001/PM tcp://localhost:30004/W tcp://localhost:30001/W
+SUBMIT tcp://localhost:30001/W pl10.txt result 200 CharCountMapper ./LibMapperCharCount.dll
