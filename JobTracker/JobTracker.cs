@@ -45,6 +45,7 @@ namespace JobTracker
         public delegate void DelegateWorkToWorker(int id);
         public delegate void DelegateEnqueueSplit(int split, long start, long end, int idWorker);
         public delegate void DelegateOutputMessage(string msg);
+        public delegate void DelegateSetWorkerAlive(int id, bool alive);
 
         static void Main(string[] args)
         {
@@ -73,10 +74,11 @@ namespace JobTracker
             JobTrackerServices jts = new JobTrackerServices(jt);
             RemotingServices.Marshal(jts, "JT", typeof(JobTrackerServices));
 
+            Console.WriteLine("Starint timer on thread {0}...", Thread.CurrentThread.ManagedThreadId);
             //Check every 20 seconds if workers are alive
             System.Timers.Timer aTimer = new System.Timers.Timer(20000);
             // Hook up the Elapsed event for the timer. 
-            aTimer.Elapsed += (sender, e) => CheckWorkersAlive(sender, e, jt);
+            aTimer.Elapsed += jt.CheckWorkersAlive;
             aTimer.Enabled = true;
 
 
@@ -84,32 +86,40 @@ namespace JobTracker
             Console.ReadLine();
         }
 
-        private static void CheckWorkersAlive(Object source, ElapsedEventArgs e, JobTracker jt)
+        private void CheckWorkersAlive(Object source, ElapsedEventArgs e)
         {
-            Console.WriteLine("Checking workers alive...");
-            IDictionary<int, bool> workerAlive = jt.getWorkerAlive();
-            if (!jt.IsJobFinished())
+            Console.WriteLine("Checking workers alive from thread {0} ...", Thread.CurrentThread.ManagedThreadId);
+            if (!IsJobFinished())
             {
-                foreach (KeyValuePair<int, bool> kvp in workerAlive)
+                List<int> keys = new List<int>(getWorkerAlive().Keys);
+                foreach (int key in keys)
                 {
-                    Console.WriteLine("Worker {0} has value {1}", kvp.Key,kvp.Value);
-                    if (!workerAlive[kvp.Key])
+                    Console.WriteLine("Worker {0} has value {1}", key, getWorkerAlive()[key]);
+                    if (!getWorkerAlive()[key])
                     {
-                        int split = jt.getWorkerCurrentSplit(kvp.Key);
+                        Console.WriteLine("Worker " + key + " unresponsive. ");
+                        int split = getWorkerCurrentSplit(key);
                         if (split != 0)
                         {
-                            jt.SetWorkerCurrentSplit(kvp.Key, 0);
-                            long start = jt.getSplitStart(kvp.Key);
-                            long end = jt.getSplitEnd(kvp.Key);
-                            DelegateEnqueueSplit des = jt.EnqueueSplit;
-                            des(split, start, end, kvp.Key);
-                            DelegateOutputMessage dom = jt.dbg;
-                            dom("Worker " + kvp.Key + " unresponsive. Enqueueing split with start and end <" + split + ", " + start + ", " + end + ">");
+                            Console.WriteLine("1");
+                            SetWorkerCurrentSplit(key, 0);
+                            Console.WriteLine("2");
+                            long start = getSplitStart(key);
+                            Console.WriteLine("3");
+                            long end = getSplitEnd(key);
+                            Console.WriteLine("4");
+                            DelegateEnqueueSplit des = EnqueueSplit;
+                            Console.WriteLine("5");
+                            des(split, start, end, key);
+                            Console.WriteLine("6");
+                            DelegateOutputMessage dom = dbg;
+                            dom("Enqueueing split with start and end <" + split + ", " + start + ", " + end + ">");
                         }
                     }
                     else
                     {
-                        jt.SetWorkerAlive(kvp.Key, false);
+                        getWorkerAlive()[key] = false;
+                        Console.WriteLine("Set worker {0} alive to false", key);
                     }
                 }
             }
@@ -128,16 +138,20 @@ namespace JobTracker
 
         public void SetWorkerAlive(int id, bool alive)
         {
+            Console.WriteLine("Set worker {0} alive {1} from thread {2}", id, alive, Thread.CurrentThread.ManagedThreadId);
             if (workerAlive.ContainsKey(id))
-                workerAlive.Remove(id);
-            workerAlive.Add(id, alive);
+                workerAlive[id] = alive;
+            else
+                workerAlive.Add(id, alive);
+
         }
 
         public void SetWorkerCurrentSplit(int id, int split)
         {
             if (workerCurrentSplit.ContainsKey(id))
-                workerCurrentSplit.Remove(id);
-            workerCurrentSplit.Add(id, split);
+                workerCurrentSplit[id] = split;
+            else
+                workerCurrentSplit.Add(id, split);
         }
 
         public int getWorkerCurrentSplit(int id)
@@ -181,13 +195,20 @@ namespace JobTracker
 
         public void EnqueueSplit(int split, long start, long end, int idWorker)
         {
-            splitStart.Remove(split);
-            splitStart.Add(split, start);
-            splitEnd.Remove(split);
-            splitEnd.Add(split, end);
+            if (splitStart.ContainsKey(split))
+                splitStart[split] = start;
+            else
+                splitStart.Add(split, start);
+
+            if (splitEnd.ContainsKey(split))
+                splitEnd[split] = end;
+            else
+                splitEnd.Add(split, end);
+
             unfinishedSplitsQ.Enqueue(split);
-            workerAlive.Remove(idWorker);
-            workerAlive.Add(idWorker, false);
+
+            SetWorkerAlive(idWorker, false);
+
         }
 
         public bool SendMapper(String className, byte[] code, String workerURL, long start, long end, int split, int idWorker)
@@ -213,10 +234,12 @@ namespace JobTracker
                 //unfinishedSplitsQ.Enqueue(split);
                 if (workerCurrentSplit.ContainsKey(idWorker))
                     workerCurrentSplit.Remove(idWorker);
-                workerCurrentSplit.Add(idWorker, 0);
+                else
+                    workerCurrentSplit.Add(idWorker, 0);
                 if (workerAlive.ContainsKey(idWorker))
-                    workerAlive.Remove(idWorker);
-                workerAlive.Add(idWorker, false);
+                    workerAlive[idWorker] = false;
+                else
+                    workerAlive.Add(idWorker, false);
                 return false;
             }
         }
@@ -244,10 +267,15 @@ namespace JobTracker
 
                 if (mapSent)
                 {
-                    splitStart.Remove(sentSplits + 1);
-                    splitStart.Add(sentSplits + 1, sentBytes);
-                    splitEnd.Remove(sentSplits + 1);
-                    splitEnd.Add(sentSplits + 1, sentBytes + finalSizeSplit);
+                    if (splitStart.ContainsKey(sentSplits + 1))
+                        splitStart.Remove(sentSplits + 1);
+                    else
+                        splitStart.Add(sentSplits + 1, sentBytes);
+                    if (splitEnd.ContainsKey(sentSplits + 1))
+                        splitEnd.Remove(sentSplits + 1);
+                    else
+                        splitEnd.Add(sentSplits + 1, sentBytes + finalSizeSplit);
+
                     SubmitJobToWorker(sentBytes, sentBytes + finalSizeSplit, sentSplits + 1, clientURL, kvp.Key);
                     sentSplits++;
                     sentBytes += finalSizeSplit + 1;
@@ -267,7 +295,8 @@ namespace JobTracker
             Console.WriteLine("Submiting job to worker: " + workersRegistry[idWorker]);
             if (workerCurrentSplit.ContainsKey(idWorker))
                 workerCurrentSplit.Remove(idWorker);
-            workerCurrentSplit.Add(idWorker, split);
+            else
+                workerCurrentSplit.Add(idWorker, split);
             remoteDel.BeginInvoke(start, end, split, clientURL, asyncCallback, new object[] { split, start, end, idWorker });
 
         }
@@ -293,8 +322,10 @@ namespace JobTracker
             {
                 int id = (int)rad.EndInvoke(ar);
                 Console.WriteLine("Worker with ID: " + id + "finished his split.");
-                workerAlive.Remove(id);
-                workerAlive.Add(id, true);
+                if (workerAlive.ContainsKey(id))
+                    workerAlive[id] = true;
+                else 
+                    workerAlive.Add(id, true);
                 DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
                 delegateWorkToWorker(id);
                 jobsFinished++;
@@ -389,8 +420,14 @@ namespace JobTracker
         public void RegisterWorker(int id, string url)
         {
             Console.WriteLine("Registering worker with ID: " + id + "and URL: " + url);
-            workerAlive.Add(id, true);
-            workersRegistry.Add(id, url);
+            if (workerAlive.ContainsKey(id))
+                workerAlive[id] = true;
+            else
+                workerAlive.Add(id, true);
+            if (workersRegistry.ContainsKey(id))
+                workersRegistry[id] = url;
+            else
+                workersRegistry.Add(id, url);
         }
 
         public void StatusRequest()
