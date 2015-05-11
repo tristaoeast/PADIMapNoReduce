@@ -22,6 +22,7 @@ namespace Worker
     public delegate void RADRegisterWorker(int id, string url);
     public delegate void RADRequestJTStatus();
     public delegate void RADFreezeUnfreezeJT();
+    public delegate void DelegateOutputMessage (string msg);
 
     class Worker
     {
@@ -82,17 +83,22 @@ namespace Worker
             Console.WriteLine("Sending registration to: " + entryURL);
             remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0]+ "/W", null, null);
 
+            w.SetJobTrackerURL(entryWorker.GetJobTrackerURL());
+
             //Send im alive to job tracker every 10 seconds
             System.Timers.Timer aTimer = new System.Timers.Timer(10000);
             // Hook up the Elapsed event for the timer. 
             aTimer.Elapsed += (sender, e) => ImAlive(sender, e, w);
             aTimer.Enabled = true;
 
+            Console.WriteLine("Working on thread: " + Thread.CurrentThread.ManagedThreadId);
+
             System.Console.WriteLine("Press <enter> to terminate worker with ID: " + args[0] + " and URL: " + args[1] + "...");
             System.Console.ReadLine();
         }
 
         private static void ImAlive(Object source, ElapsedEventArgs e, Worker w) {
+            Console.WriteLine("Worker {0} sending Im Alive from thread {1}", w.getId(), Thread.CurrentThread.ManagedThreadId);
             IJobTracker jt = (IJobTracker)Activator.GetObject(typeof(IJobTracker), w.GetJobTrackerURL());
             jt.ReceiveImAlive(w.getId());
         }
@@ -332,6 +338,11 @@ namespace Worker
         {
             Console.WriteLine("Trying to Unfreeze...");
             worker.Unfreeze(jt);
+        }
+
+        public String GetJobTrackerURL()
+        {
+            return worker.GetJobTrackerURL();
         }
     }
 }

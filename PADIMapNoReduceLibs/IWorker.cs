@@ -15,5 +15,6 @@ namespace PADIMapNoReduceLibs
         void StatusRequest();
         void Freeze(bool jt);
         void Unfreeze(bool jt);
+        String GetJobTrackerURL();
     }
 }

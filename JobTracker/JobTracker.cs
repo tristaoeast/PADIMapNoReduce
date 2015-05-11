@@ -86,11 +86,13 @@ namespace JobTracker
 
         private static void CheckWorkersAlive(Object source, ElapsedEventArgs e, JobTracker jt)
         {
+            Console.WriteLine("Checking workers alive...");
             IDictionary<int, bool> workerAlive = jt.getWorkerAlive();
             if (!jt.IsJobFinished())
             {
                 foreach (KeyValuePair<int, bool> kvp in workerAlive)
                 {
+                    Console.WriteLine("Worker {0} has value {1}", kvp.Key,kvp.Value);
                     if (!workerAlive[kvp.Key])
                     {
                         int split = jt.getWorkerCurrentSplit(kvp.Key);
@@ -102,7 +104,7 @@ namespace JobTracker
                             DelegateEnqueueSplit des = jt.EnqueueSplit;
                             des(split, start, end, kvp.Key);
                             DelegateOutputMessage dom = jt.dbg;
-                            dom("Worker " + kvp.Value + " unresponsive. Enqueueing split with start and end <" + split + ", " + start + ", " + end + ">");
+                            dom("Worker " + kvp.Key + " unresponsive. Enqueueing split with start and end <" + split + ", " + start + ", " + end + ">");
                         }
                     }
                     else
@@ -124,13 +126,15 @@ namespace JobTracker
             return workerAlive;
         }
 
-        public void SetWorkerAlive(int id, bool alive) {
+        public void SetWorkerAlive(int id, bool alive)
+        {
             if (workerAlive.ContainsKey(id))
                 workerAlive.Remove(id);
             workerAlive.Add(id, alive);
         }
 
-        public void SetWorkerCurrentSplit(int id, int split) {
+        public void SetWorkerCurrentSplit(int id, int split)
+        {
             if (workerCurrentSplit.ContainsKey(id))
                 workerCurrentSplit.Remove(id);
             workerCurrentSplit.Add(id, split);
@@ -207,7 +211,11 @@ namespace JobTracker
                 //Console.WriteLine("SEND MAPPER: Could not locate worker at: " + workersRegistry[idWorker] + ". Enqueueing split {0} with start {1} and end {2}", split, start, end);
                 Console.WriteLine("SEND MAPPER: Could not locate worker at: " + workersRegistry[idWorker]);
                 //unfinishedSplitsQ.Enqueue(split);
-                workerAlive.Remove(idWorker);
+                if (workerCurrentSplit.ContainsKey(idWorker))
+                    workerCurrentSplit.Remove(idWorker);
+                workerCurrentSplit.Add(idWorker, 0);
+                if (workerAlive.ContainsKey(idWorker))
+                    workerAlive.Remove(idWorker);
                 workerAlive.Add(idWorker, false);
                 return false;
             }
@@ -330,6 +338,25 @@ namespace JobTracker
             }
             else if (sentSplits >= nSplits)
             {
+
+                while (!jobFinished)
+                {
+                    if (unfinishedSplitsQ.Count > 0)
+                    {
+                        int split = unfinishedSplitsQ.Dequeue();
+                        Console.WriteLine("There's a job queued. It is split number: " + split);
+                        long start = splitStart[split];
+                        long end = splitEnd[split];
+                        Console.WriteLine("Submitting queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
+                        SubmitJobToWorker(start, end, split, this.clientURL, id);
+                    }
+                    else
+                    {
+                        Console.WriteLine("All splits sent but job isn't finished and queue is empty. Checking again in 3 seconds");
+                        Thread.Sleep(3000);
+                    }
+                }
+
                 Console.WriteLine("ENTREI222");
                 //TRABALHO TODO FEITO E AVISAR WORKER QUANDO PEDIREM MAIS TRABALHO
             }//TODO: verify queue for unresolved messages... CHECK
@@ -479,6 +506,7 @@ namespace JobTracker
 
         public void ReceiveImAlive(int id)
         {
+            Console.WriteLine("Got an Im Alive from worker" + id);
             jobTracker.SetWorkerAlive(id, true);
         }
     }
