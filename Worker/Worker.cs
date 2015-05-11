@@ -134,7 +134,8 @@ namespace Worker
         }
 
         public void SendResultToClient(IList<KeyValuePair<string, string>> result, int split, string url)
-        {   
+        {
+            handleFreeze();
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
             RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
@@ -301,8 +302,10 @@ namespace Worker
             //        outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
             //    }
             //}
+            worker.handleFreeze();
             worker.SendResultToClient(result, split, clientURL);
             Console.WriteLine("Result of split: " + split + " to client: " + clientURL + " sent.");
+            worker.handleFreeze();
             return worker.getId();
         }
 
@@ -322,7 +325,6 @@ namespace Worker
 
         public void StatusRequest()
         {
-            worker.handleFreeze();
             Console.WriteLine("Trying to get status...");
             worker.StatusRequest();
         }
