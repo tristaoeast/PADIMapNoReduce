@@ -162,10 +162,11 @@ namespace Client
             client.SetEntryURL(eURL);
         }
 
-        public void Submit(String inputFile, int splits, String outputDirectory, String className, byte[] code)
+        public void Submit(String inputFile, int splits, String outputDirectory, String className, string dllPath)
         {
             client.SaveDirs(inputFile, outputDirectory);
 
+            byte[] code = File.ReadAllBytes(dllPath);
             FileInfo f = new FileInfo(inputFile);
             long fileSize = f.Length;
             client.dbg("New Job submitted to JobTracker at " + entryURL);

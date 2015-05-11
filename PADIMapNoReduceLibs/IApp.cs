@@ -9,7 +9,7 @@ namespace PADIMapNoReduceLibs
 {
     public interface IApp
     {
-        void Submit(String entry_url, String inputFile, String outputDirectory, int splits, String mapClassName, byte[] mapObject);
+        void Submit(String entry_url, String inputFile, String outputDirectory, int splits, String mapClassName, string dllPath);
         void notifyJobFinished(bool finished);
     }                                                                                                                                                                                                                                                                             
 }

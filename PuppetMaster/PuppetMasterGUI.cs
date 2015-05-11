@@ -23,6 +23,7 @@ namespace PuppetMaster
 {
 
     public delegate String RemoteAsyncDelegateNewWorker(String id, String serviceUrl, String entryUrl);
+    public delegate void RADSubmit(string entryUrl, string inputFile, string outputDir, int splits, string mapClassName, string dll);
     public delegate void FormWriteToOutput(String text);
     public delegate void RADRequestStatus();
     public delegate void RADFreeze(bool jt);
@@ -73,7 +74,7 @@ namespace PuppetMaster
             {
                 if (split.Length == 7)
                 {
-                    Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], File.ReadAllBytes(split[6]));
+                    Submit(split[1], split[2], split[3], Int32.Parse(split[4]), split[5], split[6]);
                 }
 
                 else
@@ -106,39 +107,42 @@ namespace PuppetMaster
                 if (split.Length != 1)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: STATUS command has no arguments" });
                 else
-                    Status();   
+                    Status();
             }
             else if (command.Equals("SlowW", StringComparison.InvariantCultureIgnoreCase))
             {
-                //dbg("Command: " + command + " " + split[1] + " " + split[2] + " " + split[3] + " " + split[4] + " " + split[5] + " " + split[6]);0
+                if (split.Length != 3)
+                    this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: SLOWW command must have 2 arguments" });
+                else
+                    Slow(Int32.Parse(split[1]), Int32.Parse(split[2]));
             }
             else if (command.Equals("FreezeW", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: FREEZEW command must have 1 argument" });
                 else
-                    Freeze(split[1], false);  
+                    Freeze(split[1], false);
             }
             else if (command.Equals("UnfreezeW", StringComparison.InvariantCultureIgnoreCase))
-            {                
+            {
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: UNFREEZEW command must have 1 argument" });
                 else
-                    Unfreeze(split[1], false);  
+                    Unfreeze(split[1], false);
             }
             else if (command.Equals("FreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: FREEZEC command must have 1 argument" });
                 else
-                    Freeze(split[1], true);  
+                    Freeze(split[1], true);
             }
             else if (command.Equals("UnfreezeC", StringComparison.InvariantCultureIgnoreCase))
             {
                 if (split.Length != 2)
                     this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "ERROR: UNFREEZEC command must have 1 argument" });
                 else
-                    Unfreeze(split[1], true);  
+                    Unfreeze(split[1], true);
             }
             else
             {
@@ -148,7 +152,15 @@ namespace PuppetMaster
             }
         }
 
-        public void Submit(String entryUrl, String inputFile, String outputDir, int splits, String mapClassName, byte[] dll)
+        public void Slow(int id, int secs)
+        {
+            this.Invoke(new FormWriteToOutput(this.dbg), "Slowing worker " + id + " for " + secs + " seconds");
+            String wURL = getURL(id.ToString());
+            IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wURL);
+            worker.Slow(secs);
+        }
+
+        public void Submit(String entryUrl, String inputFile, String outputDir, int splits, String mapClassName, string dllPath)
         {
             clientPortCounter++;
             userPortCounter++;
@@ -164,7 +176,9 @@ namespace PuppetMaster
             IApp app = (IApp)Activator.GetObject(typeof(IApp), "tcp://localhost:" + userPortCounter.ToString() + "/U");
             try
             {
-                app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
+                RADSubmit remDel = new RADSubmit(app.Submit);
+                remDel.BeginInvoke(entryUrl, inputFile, outputDir, splits, mapClassName, dllPath, null, null);
+                //app.Submit(entryUrl, inputFile, outputDir, splits, mapClassName, dll);
             }
             catch (RemotingException re)
             {
@@ -206,7 +220,7 @@ namespace PuppetMaster
 
         public void startWorkerProc(String id, String serviceUrl, String jobTrackerUrl)
         {
-            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id});
+            this.Invoke(new FormWriteToOutput(this.dbg), new object[] { "Start Worker Process with id " + id });
 
             //dbg("Start Worker Proc ");
             //workersList.Add(serviceUrl);
@@ -221,15 +235,17 @@ namespace PuppetMaster
         }
 
         public void Status()
-        { 
+        {
             bool talkedToJT = false;
-            foreach(KeyValuePair<string, string> wList in workersList){
+            foreach (KeyValuePair<string, string> wList in workersList)
+            {
                 //this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
                 IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wList.Value);
                 RADRequestStatus remoteStatW = new RADRequestStatus(worker.StatusRequest);
                 remoteStatW.BeginInvoke(null, null);
 
-                if(!talkedToJT){
+                if (!talkedToJT)
+                {
                     IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), worker.GetJobTrackerURL());
                     RADRequestStatus remoteStatJT = new RADRequestStatus(jobTracker.StatusRequest);
                     remoteStatJT.BeginInvoke(null, null);
@@ -344,7 +360,7 @@ namespace PuppetMaster
 
         public void Freeze(String id, bool jt)
         {
-            form.Invoke(new DelFreeze(form.Freeze), new Object[] {id, jt});
+            form.Invoke(new DelFreeze(form.Freeze), new Object[] { id, jt });
         }
     }
 }

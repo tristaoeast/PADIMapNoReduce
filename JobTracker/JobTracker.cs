@@ -304,6 +304,7 @@ namespace JobTracker
 
         private void SJTWCallBack(IAsyncResult ar)
         {
+            handleFreeze();
             RemoteAsyncDelegateSubmitJobToWorker rad = (RemoteAsyncDelegateSubmitJobToWorker)((AsyncResult)ar).AsyncDelegate;
             //int id = (int)rad.EndInvoke(ar);
             //Console.WriteLine("Worker with ID: " + id + "finished his split.");
@@ -379,8 +380,8 @@ namespace JobTracker
                         Console.WriteLine("There's a job queued. It is split number: " + split);
                         long start = splitStart[split];
                         long end = splitEnd[split];
-                        Console.WriteLine("Submitting queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
                         SubmitJobToWorker(start, end, split, this.clientURL, id);
+                        Console.WriteLine("Submitted queued split to worker with start and end <" + split + ", " + id + ", " + start + ", " + end + ">" + Environment.NewLine);
                     }
                     else
                     {

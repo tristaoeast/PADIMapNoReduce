@@ -4,3 +4,10 @@ WORKER 3 tcp://localhost:20001/PM tcp://localhost:30003/W tcp://localhost:30001/
 WORKER 4 tcp://localhost:20001/PM tcp://localhost:30004/W tcp://localhost:30001/W
 WAIT 20
 SUBMIT tcp://localhost:30001/W pl100.txt result 50 CharCountMapper ./LibMapperCharCount.dll
+WAIT 10
+FREEZEW 2
+STATUS
+WAIT 30
+UNFREEZEW 2
+WAIT 20
+FREEZEC 1

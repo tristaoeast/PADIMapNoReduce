@@ -80,13 +80,13 @@ namespace UserApplication
             tb_UserApp_debug.AppendText("Client initialized\r\n");
         }
 
-        public void Submit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryUrl)
+        public void Submit(String inputFile, String outputDirectory, int splits, String mapClassName, string dllPath, String entryUrl)
         {
             IClient client = (IClient)Activator.GetObject(typeof(IClient), clientURL);
             //tb_UserApp_debug.AppendText(Environment.CurrentDirectory + Environment.NewLine);
             //tb_UserApp_debug.AppendText("inFile: " + inputFile + Environment.NewLine + " splits: " + splits + Environment.NewLine + " outDir: " + outputDirectory + Environment.NewLine + " mapclassName: " + mapClassName + Environment.NewLine);
             tb_UserApp_debug.AppendText("Job from input file: " + inputFile + " and splits: " + splits + " submitted." + Environment.NewLine);
-            client.Submit(inputFile, splits, outputDirectory, mapClassName, code);
+            client.Submit(inputFile, splits, outputDirectory, mapClassName, dllPath);
             while (!appServices.isJobFinished()) {
                 tb_UserApp_debug.AppendText(".");
                 Thread.Sleep(2000);
@@ -136,7 +136,7 @@ namespace UserApplication
     }
 
     delegate void DelInit(String entryUrl);
-    delegate void DelSubmit(String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code, String entryURL);
+    delegate void DelSubmit(String inputFile, String outputDirectory, int splits, String mapClassName, String dllPath, String entryURL);
     delegate void DelJobFinished(bool finished);
 
     public class UserAppServices : MarshalByRefObject, IApp
@@ -155,10 +155,10 @@ namespace UserApplication
         }
 
 
-        public void Submit(String entryUrl, String inputFile, String outputDirectory, int splits, String mapClassName, byte[] code)
+        public void Submit(String entryUrl, String inputFile, String outputDirectory, int splits, String mapClassName, string dllPath)
         {
             form.Invoke(new DelInit(form.Init), entryUrl);
-            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, code, entryUrl });
+            form.Invoke(new DelSubmit(form.Submit), new Object[] { inputFile, outputDirectory, splits, mapClassName, dllPath, entryUrl });
         }
 
         public void notifyJobFinished(bool finished)

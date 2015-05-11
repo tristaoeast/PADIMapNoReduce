@@ -21,7 +21,7 @@ namespace Worker
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
     public delegate void RADFreezeUnfreezeJT();
-    public delegate void DelegateOutputMessage (string msg);
+    public delegate void DelegateOutputMessage(string msg);
 
     class Worker
     {
@@ -31,6 +31,7 @@ namespace Worker
         int port;
         bool freeze = false;
         String status = "Alive";
+        System.Timers.Timer aTimer = new System.Timers.Timer(10000);
 
         static void Main(string[] args)
         {
@@ -80,15 +81,14 @@ namespace Worker
             IWorker entryWorker = (IWorker)Activator.GetObject(typeof(IWorker), entryURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(entryWorker.RegisterWorker);
             Console.WriteLine("Sending registration to: " + entryURL);
-            remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0]+ "/W", null, null);
+            remoteDel.BeginInvoke(Int32.Parse(args[0]), "tcp://" + Dns.GetHostName() + ":" + split2[0] + "/W", null, null);
 
             w.SetJobTrackerURL(entryWorker.GetJobTrackerURL());
 
             //Send im alive to job tracker every 10 seconds
-            System.Timers.Timer aTimer = new System.Timers.Timer(10000);
             // Hook up the Elapsed event for the timer.    
-            aTimer.Elapsed += (sender, e) => ImAlive(sender, e, w);
-            aTimer.Enabled = true;
+            w.getTimer().Elapsed += (sender, e) => ImAlive(sender, e, w);
+            w.getTimer().Enabled = true;
 
             Console.WriteLine("Working on thread: " + Thread.CurrentThread.ManagedThreadId);
 
@@ -96,7 +96,13 @@ namespace Worker
             System.Console.ReadLine();
         }
 
-        private static void ImAlive(Object source, ElapsedEventArgs e, Worker w) {
+        public System.Timers.Timer getTimer()
+        {
+            return aTimer;
+        }
+
+        private static void ImAlive(Object source, ElapsedEventArgs e, Worker w)
+        {
             w.handleFreeze();
             Console.WriteLine("Worker {0} sending Im Alive from thread {1}", w.getId(), Thread.CurrentThread.ManagedThreadId);
             IJobTracker jt = (IJobTracker)Activator.GetObject(typeof(IJobTracker), w.GetJobTrackerURL());
@@ -137,7 +143,7 @@ namespace Worker
         {
             handleFreeze();
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
-            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult); 
+            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
             remoteDel.BeginInvoke(result, split, null, null);
         }
@@ -157,7 +163,7 @@ namespace Worker
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
             remoteDel.BeginInvoke(id, url, null, null);
         }
-        public void StatusRequest() 
+        public void StatusRequest()
         {
             Console.WriteLine("Worker " + getId() + " STATUS: " + status);
         }
@@ -173,7 +179,7 @@ namespace Worker
             }
             //se jt for true manda dormir so o jobtracker
             else
-            {   
+            {
                 IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
                 RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Freeze);
                 remoteFreezeUnfreeze.BeginInvoke(null, null);
@@ -219,6 +225,8 @@ namespace Worker
         object mapObject = null;
         Type mapType;
 
+        System.Threading.Thread t = null;
+
         public WorkerServices(Worker w)
         {
             worker = w;
@@ -229,7 +237,7 @@ namespace Worker
 
             worker.handleFreeze();
             Assembly assembly = Assembly.Load(code);
-            
+
             // Walk through each type in the assembly looking for our class
             foreach (Type type in assembly.GetTypes())
             {
@@ -252,10 +260,12 @@ namespace Worker
         }
 
         public int SubmitJobToWorker(long start, long end, int split, string clientURL)
-        {   
+        {
             worker.handleFreeze();
 
-            Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end);
+            t = System.Threading.Thread.CurrentThread;
+
+            Console.WriteLine("Job submitted starting on: " + start + " and ending on: " + end + " running on thread " + Thread.CurrentThread.ManagedThreadId);
             worker.SetClientURL(clientURL);
             Console.WriteLine("1");
             IList<KeyValuePair<String, String>> result = new List<KeyValuePair<String, String>>();
@@ -342,6 +352,22 @@ namespace Worker
         public String GetJobTrackerURL()
         {
             return worker.GetJobTrackerURL();
+        }
+
+        public void Slow(int secs)
+        {
+            Console.WriteLine("[{2}]Slowing worker {0} for {1} seconds .", worker.getId(), secs, Thread.CurrentThread.ManagedThreadId);
+
+            Console.WriteLine("1");
+            t.Suspend();
+            worker.getTimer().Enabled = false;
+            Console.WriteLine("2");
+            Thread.Sleep(secs * 1000);
+            Console.WriteLine("3");
+            worker.getTimer().Enabled = true;
+            t.Resume();
+            Console.WriteLine("4");
+
         }
     }
 }
