@@ -20,7 +20,6 @@ namespace Worker
     public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string, string>> result, int split);
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
-    public delegate void RADRequestJTStatus();
     public delegate void RADFreezeUnfreezeJT();
     public delegate void DelegateOutputMessage (string msg);
 
@@ -31,7 +30,7 @@ namespace Worker
         int myId;
         int port;
         bool freeze = false;
-        String status;
+        String status = "Alive";
 
         static void Main(string[] args)
         {
@@ -87,7 +86,7 @@ namespace Worker
 
             //Send im alive to job tracker every 10 seconds
             System.Timers.Timer aTimer = new System.Timers.Timer(10000);
-            // Hook up the Elapsed event for the timer. 
+            // Hook up the Elapsed event for the timer.    
             aTimer.Elapsed += (sender, e) => ImAlive(sender, e, w);
             aTimer.Enabled = true;
 
@@ -98,6 +97,7 @@ namespace Worker
         }
 
         private static void ImAlive(Object source, ElapsedEventArgs e, Worker w) {
+            w.handleFreeze();
             Console.WriteLine("Worker {0} sending Im Alive from thread {1}", w.getId(), Thread.CurrentThread.ManagedThreadId);
             IJobTracker jt = (IJobTracker)Activator.GetObject(typeof(IJobTracker), w.GetJobTrackerURL());
             jt.ReceiveImAlive(w.getId());
@@ -137,15 +137,13 @@ namespace Worker
         {
             handleFreeze();
             IClient client = (IClient)Activator.GetObject(typeof(IClient), url);
-            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult);
-            status = "Sending result of split: " + split + " to client: " + url; ; 
+            RemoteAsyncDelegateSendResultsToClient remoteDel = new RemoteAsyncDelegateSendResultsToClient(client.ReturnResult); 
             Console.WriteLine("Sending result of split: " + split + " to client: " + url);
             remoteDel.BeginInvoke(result, split, null, null);
         }
 
         public void SubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL)
         {
-            status = "Received SubmitJob from: " + clientURL + ". Forwarding to: " + jobTrackerURL;
             Console.WriteLine("Received SubmitJob from: " + clientURL + ". Forwarding to: " + jobTrackerURL);
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADSubmitJobToTracker remoteDel = new RADSubmitJobToTracker(jobTracker.SubmitJob);
@@ -154,7 +152,6 @@ namespace Worker
 
         public void RegisterWorker(int id, string url)
         {
-            status = "Sending RegisterWorker of ID: " + id + " with URL: " + url + " to JobTracker at " + jobTrackerURL;
             Console.WriteLine("Sending RegisterWorker of ID: " + id + " with URL: " + url + " to JobTracker at " + jobTrackerURL);
             IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
             RADRegisterWorker remoteDel = new RADRegisterWorker(jobTracker.RegisterWorker);
@@ -163,10 +160,6 @@ namespace Worker
         public void StatusRequest() 
         {
             Console.WriteLine("Worker " + getId() + " STATUS: " + status);
-            //request jobtracker status
-            IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
-            RADRequestJTStatus remoteStat = new RADRequestJTStatus(jobTracker.StatusRequest);
-            remoteStat.BeginInvoke(null, null);
         }
         public void Freeze(bool jt)
         {
@@ -175,12 +168,12 @@ namespace Worker
             if (!jt)
             {
                 freeze = true;
-                status = "Worker " + getId() + " is frozen";
+                status = "Frozen";
                 Console.WriteLine("Freezing Worker " + getId() + " now");
             }
             //se jt for true manda dormir so o jobtracker
             else
-            {
+            {   
                 IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
                 RADFreezeUnfreezeJT remoteFreezeUnfreeze = new RADFreezeUnfreezeJT(jobTracker.Freeze);
                 remoteFreezeUnfreeze.BeginInvoke(null, null);
@@ -194,7 +187,7 @@ namespace Worker
             if (!jt)
             {
                 freeze = false;
-                status = "Worker " + getId() + " is alive!";
+                status = "Alive";
                 Console.WriteLine("Unfreezing Worker " + getId() + " now");
             }
             //se jt for true manda acordar o jobtracker
@@ -307,7 +300,6 @@ namespace Worker
             //        outFile.WriteLine("<" + l.Key + ", " + l.Value + ">");
             //    }
             //}
-            worker.handleFreeze();
             worker.SendResultToClient(result, split, clientURL);
             Console.WriteLine("Result of split: " + split + " to client: " + clientURL + " sent.");
             worker.handleFreeze();

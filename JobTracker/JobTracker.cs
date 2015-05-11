@@ -26,6 +26,7 @@ namespace JobTracker
         String clientURL;
         String jtURL;
         bool freeze = false;
+        String status = "Alive and in charge";
 
         int jobsFinished = 0;
 
@@ -49,7 +50,6 @@ namespace JobTracker
 
         static void Main(string[] args)
         {
-
             if (args.Length < 1)
             {
                 Console.WriteLine("ERROR: Wrong number of arguments. Expected format: JOBTRACKER <JOBTRACKER-PORT [50001-59999]> <JOBTRACKER-URL> ");
@@ -88,6 +88,7 @@ namespace JobTracker
 
         private void CheckWorkersAlive(Object source, ElapsedEventArgs e)
         {
+            handleFreeze();
             Console.WriteLine("Checking workers alive from thread {0} ...", Thread.CurrentThread.ManagedThreadId);
             if (!IsJobFinished())
             {
@@ -286,7 +287,7 @@ namespace JobTracker
 
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
         {
-
+            handleFreeze();
             //conforme o id ir ver qual o URL desse worker e meter aqui em baixo!!!!!
             IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), workersRegistry[idWorker]);
 
@@ -324,7 +325,7 @@ namespace JobTracker
                 Console.WriteLine("Worker with ID: " + id + "finished his split.");
                 if (workerAlive.ContainsKey(id))
                     workerAlive[id] = true;
-                else 
+                else
                     workerAlive.Add(id, true);
                 DelegateWorkToWorker delegateWorkToWorker = ManageWorkToWorker;
                 delegateWorkToWorker(id);
@@ -432,7 +433,7 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!");
+            Console.WriteLine("JT STATUS: " + status);
         }
 
         public long getSentBytes()
@@ -474,12 +475,14 @@ namespace JobTracker
         {
             Console.WriteLine("Freezing JobTracker now");
             freeze = true;
+            status = "Frozen";
         }
 
         public void Unfreeze()
         {
             Console.WriteLine("Unfreezing JobTracker now");
             freeze = false;
+            status = "Alive and in charge";
         }
 
         public void handleFreeze()
@@ -524,7 +527,6 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            jobTracker.handleFreeze();
             jobTracker.StatusRequest();
         }
 
@@ -543,6 +545,7 @@ namespace JobTracker
 
         public void ReceiveImAlive(int id)
         {
+            jobTracker.handleFreeze();
             Console.WriteLine("Got an Im Alive from worker" + id);
             jobTracker.SetWorkerAlive(id, true);
         }
