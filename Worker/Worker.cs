@@ -20,7 +20,6 @@ namespace Worker
     public delegate void RemoteAsyncDelegateSendResultsToClient(IList<KeyValuePair<string, string>> result, int split);
     public delegate void RADSubmitJobToTracker(long fileSize, int splits, String className, byte[] code, String clientURL);
     public delegate void RADRegisterWorker(int id, string url);
-    public delegate void RADRequestJTStatus();
     public delegate void RADFreezeUnfreezeJT();
     public delegate void DelegateOutputMessage (string msg);
 
@@ -163,10 +162,6 @@ namespace Worker
         public void StatusRequest() 
         {
             Console.WriteLine("Worker " + getId() + " STATUS: " + status);
-            //request jobtracker status
-            IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), jobTrackerURL);
-            RADRequestJTStatus remoteStat = new RADRequestJTStatus(jobTracker.StatusRequest);
-            remoteStat.BeginInvoke(null, null);
         }
         public void Freeze(bool jt)
         {
@@ -330,6 +325,7 @@ namespace Worker
 
         public void StatusRequest()
         {
+            worker.handleFreeze();
             Console.WriteLine("Trying to get status...");
             worker.StatusRequest();
         }

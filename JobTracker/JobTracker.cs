@@ -26,7 +26,7 @@ namespace JobTracker
         String clientURL;
         String jtURL;
         bool freeze = false;
-
+        
         int jobsFinished = 0;
 
         bool jobFinished = true;
@@ -48,7 +48,6 @@ namespace JobTracker
 
         static void Main(string[] args)
         {
-
             if (args.Length < 1)
             {
                 Console.WriteLine("ERROR: Wrong number of arguments. Expected format: JOBTRACKER <JOBTRACKER-PORT [50001-59999]> <JOBTRACKER-URL> ");
@@ -56,9 +55,9 @@ namespace JobTracker
                 Console.ReadLine();
                 return;
             }
-
+            
             Console.WriteLine("JOBTRACKER-URL: " + args[1]);
-
+            
             string[] split1 = args[1].Split(':');
             string[] split2 = split1[2].Split('/');
             int port = Int32.Parse(split2[0]);
@@ -395,7 +394,7 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            Console.WriteLine("I'm JobTracker at: " + jtURL + " and I'm alive!");
+            Console.WriteLine("I'm JobTracker " + jtURL + " and I'm in charge");
         }
 
         public long getSentBytes()

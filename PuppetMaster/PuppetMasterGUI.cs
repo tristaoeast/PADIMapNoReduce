@@ -24,7 +24,7 @@ namespace PuppetMaster
 
     public delegate String RemoteAsyncDelegateNewWorker(String id, String serviceUrl, String entryUrl);
     public delegate void FormWriteToOutput(String text);
-    public delegate void RADRequestWStatus();
+    public delegate void RADRequestStatus();
     public delegate void RADFreeze(bool jt);
     public delegate void RADUnfreeze(bool jt);
 
@@ -222,11 +222,20 @@ namespace PuppetMaster
 
         public void Status()
         { 
+            bool talkedToJT = false;
             foreach(KeyValuePair<string, string> wList in workersList){
                 //this.Invoke(new FormWriteToOutput(this.dbg), new object[] {"workersLists: " + wURL + " STATUS request" });
                 IWorker worker = (IWorker)Activator.GetObject(typeof(IWorker), wList.Value);
-                RADRequestWStatus remoteStat = new RADRequestWStatus(worker.StatusRequest);
-                remoteStat.BeginInvoke(null, null);
+                RADRequestStatus remoteStatW = new RADRequestStatus(worker.StatusRequest);
+                remoteStatW.BeginInvoke(null, null);
+
+                if(!talkedToJT){
+
+                    IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), worker.GetJobTrackerURL());
+                    RADRequestStatus remoteStatJT = new RADRequestStatus(jobTracker.StatusRequest);
+                    remoteStatJT.BeginInvoke(null, null);
+                    talkedToJT = true;
+                }
             }
         }
 
