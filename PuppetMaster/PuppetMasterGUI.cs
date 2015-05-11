@@ -34,7 +34,7 @@ namespace PuppetMaster
         private String command;
         private String jobTrackerUrl = String.Empty; //serviceurl ou entryurl
         //default value for the PM port
-        private int port = 20001;
+        private int port;
         TcpChannel chan;
         PuppetMasterServices appServices;
         int clientPortCounter = 10000;
@@ -44,6 +44,17 @@ namespace PuppetMaster
         public PuppetMasterGUI()
         {
             InitializeComponent();
+
+            string[] args = Environment.GetCommandLineArgs();
+
+            if (args.Length < 2)
+            {
+                dbg("ERROR: Wrong number of arguments. Expected format: PUPPETMASTER <PM-PORT [200001-29999]>");
+                dbg("Please close application");
+
+            }
+
+            port = Int32.Parse(args[1]);
 
             //PuppetMasterServices.form = this;
             PuppetMasterServices.form = this;
@@ -353,14 +364,14 @@ namespace PuppetMaster
             return "Sucessfully launched a new Worker";
         }
 
-        public void Status()
-        {
-            form.Invoke(new DelStatus(form.Status), null);
-        }
+        //public void Status()
+        //{
+        //    form.Invoke(new DelStatus(form.Status), null);
+        //}
 
-        public void Freeze(String id, bool jt)
-        {
-            form.Invoke(new DelFreeze(form.Freeze), new Object[] { id, jt });
-        }
+        //public void Freeze(String id, bool jt)
+        //{
+        //    form.Invoke(new DelFreeze(form.Freeze), new Object[] { id, jt });
+        //}
     }
 }
