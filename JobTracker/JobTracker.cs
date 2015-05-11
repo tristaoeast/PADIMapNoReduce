@@ -26,6 +26,7 @@ namespace JobTracker
         String clientURL;
         String jtURL;
         bool freeze = false;
+        String status = "Alive and in charge";
         
         int jobsFinished = 0;
 
@@ -85,6 +86,7 @@ namespace JobTracker
 
         private static void CheckWorkersAlive(Object source, ElapsedEventArgs e, JobTracker jt)
         {
+            jt.handleFreeze();
             Console.WriteLine("Checking workers alive...");
             IDictionary<int, bool> workerAlive = jt.getWorkerAlive();
             if (!jt.IsJobFinished())
@@ -257,7 +259,7 @@ namespace JobTracker
 
         public void SubmitJobToWorker(long start, long end, int split, String clientURL, int idWorker)
         {
-
+            handleFreeze();
             //conforme o id ir ver qual o URL desse worker e meter aqui em baixo!!!!!
             IWorker newWorker = (IWorker)Activator.GetObject(typeof(IWorker), workersRegistry[idWorker]);
 
@@ -394,7 +396,7 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            Console.WriteLine("I'm JobTracker " + jtURL + " and I'm in charge");
+            Console.WriteLine("JT STATUS: " + status);
         }
 
         public long getSentBytes()
@@ -436,12 +438,14 @@ namespace JobTracker
         {
             Console.WriteLine("Freezing JobTracker now");
             freeze = true;
+            status = "Frozen";
         }
 
         public void Unfreeze()
         {
             Console.WriteLine("Unfreezing JobTracker now");
             freeze = false;
+            status = "Alive and in charge";
         }
 
         public void handleFreeze()
@@ -486,7 +490,6 @@ namespace JobTracker
 
         public void StatusRequest()
         {
-            jobTracker.handleFreeze();
             jobTracker.StatusRequest();
         }
 
@@ -505,6 +508,7 @@ namespace JobTracker
 
         public void ReceiveImAlive(int id)
         {
+            jobTracker.handleFreeze();
             Console.WriteLine("Got an Im Alive from worker" + id);
             jobTracker.SetWorkerAlive(id, true);
         }

@@ -230,7 +230,6 @@ namespace PuppetMaster
                 remoteStatW.BeginInvoke(null, null);
 
                 if(!talkedToJT){
-
                     IJobTracker jobTracker = (IJobTracker)Activator.GetObject(typeof(IJobTracker), worker.GetJobTrackerURL());
                     RADRequestStatus remoteStatJT = new RADRequestStatus(jobTracker.StatusRequest);
                     remoteStatJT.BeginInvoke(null, null);
